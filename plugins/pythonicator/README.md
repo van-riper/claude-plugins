@@ -1,7 +1,7 @@
 # pythonicator
 
-A local Claude Code plugin that enforces the personal Python styleguide as the
-canonical source of truth for agentic Python work.
+A Claude Code plugin that enforces the bundled Python styleguide references as
+the canonical source of truth for agentic Python development.
 
 It bundles three coordinated parts:
 
@@ -19,17 +19,19 @@ It bundles three coordinated parts:
 
 ## Install
 
-The plugin is local; nothing is published. From Claude Code:
+First make sure the `van-riper` marketplace is enabled, then install this plugin
+with this command in the Claude Code TUI:
 
 ```text
-/plugin marketplace add ~/.claude/plugins/local/pythonicator
-/plugin install pythonicator
+/plugin install pythonicator@van-riper
 ```
 
-The skill, hook, and agent register automatically. No `settings.json` edit is
-needed.
-
 ## The canon is generated
+
+**NOTE:** the canon .md files in the `pythonic-canon` references folder are
+sourced directly from my personal styleguides, which remain unpublished for now.
+The `sync_canon` script is purely for my convenience in shipping my styleguides
+with this plugin and keeping it up-to-date.
 
 `references/` and `ruff.base.toml` are built from two sources of truth:
 
