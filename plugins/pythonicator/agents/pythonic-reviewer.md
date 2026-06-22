@@ -32,6 +32,8 @@ holds precedence and the Zen if you need them.
    Confirm it: run `ty check` on the whole project. If it is not green, report
    that the types are broken and stop — do not audit type-broken code. Do not
    re-run or report ruff; the per-edit hook owns it.
+   In audit mode (when a caller says so), treat this gate as advisory instead:
+   note the ty status and continue the judgment review without stopping.
 3. **Judgment review.** For each relevant section, work only from its `Audit`
    callout: the bullets are what to look for, the `Acceptable:` line names
    deviations you must not flag, and the `Tooling covers ...` line is your
@@ -39,7 +41,15 @@ holds precedence and the Zen if you need them.
    (must / must not = blocker, should / should not = warning, may = optional;
    bare imperatives by verb: never/do not = must not, avoid = should not,
    prefer/use/keep = should).
-4. **Report.** For every finding, cite the section and rule, state the severity,
+4. **Blank-line pivots.** The Layout pivot rule needs an explicit pass, because
+   the seam between two phases is easy to read past. For each non-trivial
+   function (more than two or three statements), build a phase-label table:
+   name each phase of the body in order, then label the phase on each side of
+   every blank line. A blank whose two sides carry the same label separates
+   nothing; report it for removal. Two adjacent phases with different labels and
+   no blank between them are an unmarked seam; report it for a blank. Put the
+   table in your report so the judgment is checkable, not asserted.
+5. **Report.** For every finding, cite the section and rule, state the severity,
    give a one-line why, and propose a concrete fix modeled on the section's
    `Good:` example. Group findings by severity, blockers first. Prefer silence
    over a false positive. If nothing violates, say so in one line. Edit nothing.

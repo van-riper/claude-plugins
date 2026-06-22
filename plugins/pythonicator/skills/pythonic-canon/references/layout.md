@@ -10,7 +10,8 @@ How code sits on the page: its vertical rhythm, line width, and import order.
 **Audit**
 Judgment checks no tool catches:
 
-- A blank line separates lines that are not distinct steps, or falls after most statements and dilutes the signal.
+- A blank line falls between two statements of one phase (name both sides; matching names mean it separates nothing), or falls after most statements and dilutes the signal.
+- Distinct phases run together with no blank between them, so separate steps read as a single block.
 - A line over 80 columns that is not an exempt URL, path, or whitespace-free constant.
 - An import alias that is neither a standard convention nor a clash resolution.
 
@@ -23,7 +24,7 @@ Tooling covers indentation, blank-line caps, the 100-column hard cap, import gro
 A blank line is the most overused and least considered character in Python. It earns its own section.
 
 **Rule**
-A blank line **should** mark a _logic pivot_, a point where the function's intent shifts, such as setup to compute to return. One blank, one pivot. If you cannot identify the shift, omit the line.
+A blank line **should** mark a _logic pivot_, a point where the function's intent shifts: guard to compute, compute to assemble, assemble to return, or the line where a new primary structure first takes shape. Name the phase on each side. If the two names match, the blank separates nothing and **should** go; if they differ with no blank between them, the seam is unmarked and one **should** be added. One blank, one pivot. If you cannot name the shift, omit the line.
 
 A blank line is punctuation, not decoration. It tells the reader that one thought has ended and another begins, so spend it only on meaning.
 

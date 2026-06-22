@@ -1,8 +1,9 @@
-# Inherits the full enforced ruleset (mirrored by sync_canon.py); only adds
-# plugin-local exceptions.
 extend = "ruff.base.toml"
 
+extend-exclude = ["tests/fixtures"]
+
 [lint.per-file-ignores]
-# Hook scripts are standalone executables that legitimately shell out to the
-# toolchain; they are not an importable package.
 "hooks/*.py" = ["INP001", "S404", "S603", "S607"]
+"scripts/*.py" = ["INP001", "S404", "S603", "S607"]
+"tests/*.py" = ["INP001", "S101"]
+"tests/fixtures/*.py" = ["ALL"]

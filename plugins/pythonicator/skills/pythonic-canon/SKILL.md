@@ -65,7 +65,7 @@ reports STALE, rebuild with `python3 hooks/sync_canon.py`.
 A fast digest; each `references/<section>.md` carries the section's authoritative
 `Audit` callout. Before declaring Python work complete, confirm:
 
-- [ ] Every blank line inside a function marks a nameable pivot.
+- [ ] Every blank inside a function sits on a named phase seam (same name on both sides means cut it; a seam with no blank means add one).
 - [ ] Names holding a quantity end with their unit, e.g. `timeout_seconds`.
 - [ ] No abbreviations beyond `i`/`j`/`k`, a comprehension throwaway, `e`, `f`.
 - [ ] Meaningful or repeated primitive types are aliased with `type`.
