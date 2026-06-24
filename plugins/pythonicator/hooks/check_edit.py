@@ -18,6 +18,10 @@ import sys
 from pathlib import Path
 from typing import cast
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import toolrunner
+
 TIMEOUT_SECONDS = 30
 
 
@@ -127,17 +131,21 @@ def main() -> int:
     if target is None:
         return 0
 
-    _run(["ruff", "format"], target)
-    _run(["ruff", "check", "--fix"], target)
     findings: list[str] = []
-    ruff_left = _diagnostics(
-        _run(["ruff", "check", "--output-format", "concise"], target)
-    )
-    if ruff_left:
-        findings.append(f"ruff:\n{ruff_left}")
-    ty_left = _diagnostics(_run(["ty", "check"], target))
-    if ty_left:
-        findings.append(f"ty:\n{ty_left}")
+    ruff = toolrunner.tool_command("ruff")
+    if ruff is not None:
+        _run([*ruff, "format"], target)
+        _run([*ruff, "check", "--fix"], target)
+        ruff_left = _diagnostics(
+            _run([*ruff, "check", "--output-format", "concise"], target)
+        )
+        if ruff_left:
+            findings.append(f"ruff:\n{ruff_left}")
+    ty = toolrunner.tool_command("ty")
+    if ty is not None:
+        ty_left = _diagnostics(_run([*ty, "check"], target))
+        if ty_left:
+            findings.append(f"ty:\n{ty_left}")
 
     if findings:
         _report(target, findings)

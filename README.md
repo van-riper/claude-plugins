@@ -11,7 +11,7 @@ A personal Claude Code plugin marketplace.
 ## Plugins
 
 - **pythonicator**: enforces the shipped Python styleguide on agentic Python
-  work: a derived canon, a ruff and ty PostToolUse hook, and a conformance
+  work: a derived canon, a Ruff and ty PostToolUse hook, and a conformance
   reviewer agent. See the [README](plugins/pythonicator/README.md).
 
 ## Updating

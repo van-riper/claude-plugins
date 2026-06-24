@@ -22,6 +22,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "hooks"))
+
+# Resolved at runtime by the sys.path insert above. The edit hook runs ty
+# from the repo root, where it cannot follow that, so silence the one check.
+import toolrunner  # ty: ignore[unresolved-import]
+
 
 class TyStatus(TypedDict, total=False):
     """Advisory ty result for a scanned target.
@@ -525,9 +531,12 @@ def run_ty(root: Path) -> TyStatus:
     Returns:
         A dict with "ran" and either "clean" or an "error" note.
     """
+    ty = toolrunner.tool_command("ty")
+    if ty is None:
+        return {"ran": False, "error": "ty not found on PATH or via uvx"}
     try:
         completed = subprocess.run(
-            ["ty", "check", str(root)],
+            [*ty, "check", str(root)],
             capture_output=True,
             text=True,
             timeout=TY_TIMEOUT_SECONDS,

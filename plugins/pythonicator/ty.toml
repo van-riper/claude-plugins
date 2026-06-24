@@ -1,2 +1,2 @@
 [environment]
-extra-paths = ["scripts"]
+extra-paths = ["scripts", "hooks"]
