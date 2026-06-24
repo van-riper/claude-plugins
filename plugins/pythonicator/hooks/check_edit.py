@@ -4,6 +4,10 @@ Runs ruff (format, then safe autofixes) and ty on the Python file that was just
 written or edited, and feeds any remaining findings back to the agent as
 additional context. Never blocks the edit: a missing tool or unexpected error
 fails open.
+
+This is the plugin's only ruff layer. It is advisory by design, so do not pair
+it with a separate blocking ruff hook on the same edit — the two produce a
+confusing double signal. See the README's "Ruff: run one hook, not two".
 """
 
 from __future__ import annotations

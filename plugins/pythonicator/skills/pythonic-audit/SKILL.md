@@ -22,7 +22,8 @@ tiers: a static scan over every file, then a judgment review of each module.
    `pythonic-reviewer` per directory, in **audit mode**: tell each reviewer
    "Audit mode: run ty for information and note its status, but do NOT stop if
    it is not green — proceed with the judgment review. The ruff restriction is
-   unchanged." Ask each to return
+   unchanged. Do not run audit_scan.py; this skill already ran the static tier
+   and merges it." Ask each to return
    findings as a list of `file · line · section · rule · severity · why · fix`.
 5. **Merge and report.** Combine the two tiers, then dedupe by underlying
    issue, not by exact key. The tiers use different rule names for the same

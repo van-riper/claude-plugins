@@ -411,17 +411,21 @@ def is_stale() -> bool:
     """Report whether either vault doc is newer than the generated canon.
 
     Returns:
-        True if the canon is missing or older than a source doc.
+        True if the canon is missing or older than a present source doc;
+        False when no source docs exist (the vault is absent, so the
+        committed canon cannot be rebuilt and is treated as current).
     """
     generated = list(REFS_DIR.glob("*.md"))
     if RUFF_BASE.exists():
         generated.append(RUFF_BASE)
     if not generated:
         return True
-    newest_generated = max(item.stat().st_mtime for item in generated)
-    sources = [CORE_DOC, PYTHON_DOC]
+    sources = [doc for doc in (CORE_DOC, PYTHON_DOC) if doc.exists()]
     if RUFF_CONFIG.exists():
         sources.append(RUFF_CONFIG)
+    if not sources:
+        return False
+    newest_generated = max(item.stat().st_mtime for item in generated)
     newest_source = max(item.stat().st_mtime for item in sources)
     return newest_source > newest_generated
 

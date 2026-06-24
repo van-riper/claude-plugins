@@ -1,11 +1,20 @@
 {
   "name": "pythonicator",
   "description": "Enforce the personal Python styleguide as the canonical source of truth for agentic Python work: a derived canon, a ruff PostToolUse hook, and a conformance reviewer agent.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "author": {
     "name": "van-riper"
   },
-  "keywords": ["python", "styleguide", "ruff", "canon", "linting"],
-  "skills": ["./skills/pythonic-canon", "./skills/pythonic-audit"]
+  "keywords": [
+    "python",
+    "styleguide",
+    "ruff",
+    "canon",
+    "linting"
+  ],
+  "skills": [
+    "./skills/pythonic-canon",
+    "./skills/pythonic-audit"
+  ]
 }

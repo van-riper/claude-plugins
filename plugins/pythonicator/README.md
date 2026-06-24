@@ -12,10 +12,16 @@ It bundles three coordinated parts:
 - **`check_edit.py` hook** — a `PostToolUse` hook that runs `ruff format`,
   `ruff check --fix`, and `ty check` on every `.py` you edit, feeding anything
   unresolved back as context. Mechanical conformance, every edit, for free.
+- **`sync_session.py` hook** — a `SessionStart` hook that rebuilds the canon
+  once per session when the source styleguide has moved ahead, so the reviewer
+  trusts it as current without checking freshness on every dispatch. Fails open
+  when the source docs are absent.
 - **`pythonic-reviewer` agent** — a report-only subagent for a deliberate
-  end-of-work pass. It runs a whole-project `ty` gate, then audits the judgment
-  rules ruff and ty cannot see, following the canon's Audit Protocol: it reports
-  severity-mapped, cited findings with proposed fixes and edits nothing.
+  end-of-work pass. It clears the mechanical rules with the static scanner, then
+  audits the judgment rules ruff and ty cannot see, following the canon's Audit
+  Protocol: it reports severity-mapped, cited findings with proposed fixes and
+  edits nothing. It trusts the edit hook and controller for types rather than
+  running its own project-wide `ty`.
 
 ## Install
 
@@ -26,7 +32,7 @@ with this command in the Claude Code TUI:
 /plugin install pythonicator@van-riper
 ```
 
-## The canon is generated
+## Where is the canon sourced from?
 
 **NOTE:** the canon .md files in the `pythonic-canon` references folder are
 sourced directly from my personal styleguides, which remain unpublished for now.
@@ -61,3 +67,14 @@ top of `hooks/sync_canon.py` (`VAULT_DIR`, `CORE_DOC`, `PYTHON_DOC`,
 `ruff.toml` extends the mirrored `ruff.base.toml` and ignores the rules that do
 not fit standalone hook scripts. The plugin's own Python is held to the same
 canon it enforces.
+
+## Ruff: only run one hook, not two
+
+`check_edit.py` is the plugin's ruff layer. It is **fail-open**: it formats and
+applies safe autofixes, reports whatever is left as advisory context, and never
+blocks the edit. If you already run a separate **blocking** ruff hook (for
+example a personal `~/.claude/hooks/ruff-check.sh`), the two fire on the same
+edit and you get a confusing double signal — one reporting a finding as
+advisory, the other as blocking. Pick one. Either drop the personal hook and let
+this plugin own ruff, or disable this plugin's hook and keep your blocker; do
+not run both.
