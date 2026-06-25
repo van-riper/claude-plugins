@@ -12,11 +12,11 @@ tiers: a static scan over every file, then a judgment review of each module.
 ## Procedure
 
 1. **Resolve the target.** Use the path the user gave, else the current
-   directory. Locate the plugin: `find ~/.claude/plugins -path '*pythonicator*/scripts/audit_scan.py'`.
-2. **Freshness.** Run `python3 <plugin>/hooks/sync_canon.py --check`; rebuild
+   directory. Locate the plugin: `find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py'`.
+2. **Freshness.** Run `python3 <plugin>/src/sync_canon.py --check`; rebuild
    if stale so the review uses the current canon. (Skip quietly if the vault
    docs are absent on this machine.)
-3. **Static tier.** Run `python3 <plugin>/scripts/audit_scan.py <target>` and
+3. **Static tier.** Run `python3 <plugin>/src/audit_scan.py <target>` and
    capture the JSON. This is whole-repo, machine-decidable coverage.
 4. **Deep tier.** Group the discovered `.py` files by directory. Dispatch one
    `pythonic-reviewer` per directory, in **audit mode**: tell each reviewer

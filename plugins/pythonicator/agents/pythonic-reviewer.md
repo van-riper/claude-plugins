@@ -41,8 +41,8 @@ holds precedence and the Zen if you need them.
    it and run it on the files under review (it takes a file or a directory):
 
    ```
-   find ~/.claude/plugins -path '*pythonicator*/scripts/audit_scan.py'
-   python3 <plugin>/scripts/audit_scan.py <file-or-dir>
+   find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py'
+   python3 <plugin>/src/audit_scan.py <file-or-dir>
    ```
 
    It prints JSON. Its findings — `legacy-typing`, `missing-annotation`,

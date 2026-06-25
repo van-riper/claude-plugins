@@ -62,8 +62,8 @@ The canon documents in `references/` are generated from my vault styleguide,
 which will be verified and rebuilt frequently:
 
 ```shell
-python3 hooks/sync_canon.py          # rebuild the canon from the vault
-python3 hooks/sync_canon.py --check  # exit nonzero if the canon is stale
+python3 src/sync_canon.py          # rebuild the canon from the vault
+python3 src/sync_canon.py --check  # exit nonzero if the canon is stale
 ```
 
 The build strips Obsidian syntax, inlines the core rules each Python section
@@ -73,7 +73,7 @@ sections are picked up automatically.
 ## Moving the source files
 
 If the vault docs move, edit the configuration block at the top of
-`hooks/sync_canon.py` (`VAULT_DIR`, `CORE_DOC`, `PYTHON_DOC`) and rebuild.
+`src/sync_canon.py` (`VAULT_DIR`, `CORE_DOC`, `PYTHON_DOC`) and rebuild.
 Nothing else references those paths.
 
 ## The Ruff config is the source of truth

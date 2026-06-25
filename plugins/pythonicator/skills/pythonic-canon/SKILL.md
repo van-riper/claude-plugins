@@ -38,9 +38,9 @@ reads as **should not**; "prefer", "use", and "keep" read as **should**.
 ## Freshness
 
 The canon is generated from the vault docs. If they may have changed, verify
-before trusting it: run `python3 hooks/sync_canon.py --check` from the plugin
+before trusting it: run `python3 src/sync_canon.py --check` from the plugin
 root (locate it with `find ~/.claude/plugins -name sync_canon.py`). If it
-reports STALE, rebuild with `python3 hooks/sync_canon.py`.
+reports STALE, rebuild with `python3 src/sync_canon.py`.
 
 ## Quick reference
 

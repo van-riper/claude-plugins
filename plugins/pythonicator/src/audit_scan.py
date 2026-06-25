@@ -22,11 +22,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "hooks"))
-
-# Resolved at runtime by the sys.path insert above. The edit hook runs ty
-# from the repo root, where it cannot follow that, so silence the one check.
-import toolrunner  # ty: ignore[unresolved-import]
+import toolrunner
 
 
 class TyStatus(TypedDict, total=False):
