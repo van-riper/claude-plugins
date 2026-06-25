@@ -79,9 +79,8 @@ Nothing else references those paths.
 ## The Ruff config is the source of truth
 
 `ruff.pythonicator.toml` is not generated; it is the hand-maintained,
-authoritative Ruff config. Both the plugin's own `ruff.toml` and your personal
-global Ruff config extend it, so there is one place to edit and nothing to keep
-in sync.
+authoritative Ruff config. Both this plugin and your personal global Ruff config
+extend it, so there is one place to edit and nothing to keep in sync.
 
 The `SessionStart` hook wires your global config up for you. Wherever the
 plugin is installed, it copies the installed `ruff.pythonicator.toml` into your
@@ -110,17 +109,3 @@ tracking new changes.
 If you would rather your `ruff.toml` _be_ the canon with no local overrides,
 symlink it to `ruff.pythonicator.toml` yourself. The hook detects a symlinked
 `ruff.toml` and leaves it alone.
-
-## Linting this plugin
-
-`ruff.toml` extends `ruff.pythonicator.toml` and ignores the rules that do not
-fit standalone hook scripts. The plugin's own Python is held to the same Ruff
-config settings that it enforces.
-
-## Ruff: only run one hook, not two
-
-`check_edit.py` is the plugin's only Ruff layer, and it is advisory: it formats,
-applies safe autofixes, reports the rest as context, and never blocks an edit.
-If you also run a blocking Ruff hook (say `~/.claude/hooks/ruff-check.sh`), both
-fire on each edit and you get a confusing double signal. Pick one; do not run
-both.
