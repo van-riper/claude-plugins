@@ -1,9 +1,0 @@
-extend = "ruff.pythonicator.toml"
-
-extend-exclude = ["tests/fixtures"]
-
-[lint.per-file-ignores]
-"hooks/*.py" = ["INP001", "S404", "S603", "S607"]
-"scripts/*.py" = ["INP001", "S404", "S603", "S607"]
-"tests/*.py" = ["INP001", "S101"]
-"tests/fixtures/*.py" = ["ALL"]
