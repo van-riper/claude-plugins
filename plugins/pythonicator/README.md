@@ -9,9 +9,13 @@ It bundles three coordinated parts:
   quick reference, and judgment checklist, plus the full canon in `references/`,
   one file per section, with the shared Audit Protocol factored into
   `audit-protocol.md`. Derived from the vault styleguide, not hand-written.
-- **`check_edit.py` hook:** a `PostToolUse` hook that runs `ruff format`,
-  `ruff check --fix`, and `ty check` on every `.py` you edit, feeding anything
-  unresolved back as context. Mechanical conformance, every edit, for free.
+- **`check_edit.py` hook:** a `PostToolUse` hook that quietly applies
+  `ruff format` and `ruff check --fix` to every `.py` you edit and reports
+  nothing. Safe autofixes, every edit, for free, with no interruption.
+- **`check_stop.py` hook:** a `Stop` hook that, when the agent tries to finish,
+  sweeps the files git reports as changed this session with `ruff check` and
+  `ty check` and blocks until they are clean. The sweep runs before any
+  judgment review, so the reviewer starts from a green mechanical layer.
 - **`sync_session.py` hook:** a `SessionStart` hook with two fail-open steps.
   In the development checkout it rebuilds the canon once per session when the
   source styleguide has moved ahead, so the reviewer trusts it as current
@@ -24,7 +28,7 @@ It bundles three coordinated parts:
   end-of-work pass. It clears the mechanical rules with the static scanner, then
   audits the judgment rules Ruff and ty cannot see, following the canon's Audit
   Protocol: it reports severity-mapped, cited findings with proposed fixes and
-  edits nothing. It trusts the edit hook and controller for types rather than
+  edits nothing. It trusts the `check_stop.py` hook for types rather than
   running its own project-wide `ty`.
 
 ## Install

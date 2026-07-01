@@ -1,5 +1,5 @@
 {
-  "description": "pythonicator: enforce the Python canon's mechanical rules on every .py edit.",
+  "description": "pythonicator: quietly autofix each .py edit with ruff, then sweep the session's changed files with ruff and ty before the agent finishes.",
   "hooks": {
     "SessionStart": [
       {
@@ -19,6 +19,17 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/src/check_edit.py\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/src/check_stop.py\"",
             "timeout": 60
           }
         ]

@@ -1,6 +1,6 @@
 {
   "name": "pythonicator",
-  "description": "Enforce the personal Python styleguide as the canonical source of truth for agentic Python work: a derived canon, a ruff PostToolUse hook, and a conformance reviewer agent.",
+  "description": "Enforce the personal Python styleguide as the canonical source of truth for agentic Python work: a derived canon, quiet per-edit ruff fixes with a stop-time ruff and ty sweep, and a conformance reviewer agent.",
   "version": "0.4.1",
   "license": "MIT",
   "author": {

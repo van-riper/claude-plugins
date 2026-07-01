@@ -28,14 +28,15 @@ holds precedence and the Zen if you need them.
 1. **Freshness.** The canon is synced once at session start, so trust it as
    current. Do not run `sync_canon.py` or rebuild mid-review.
 2. **Precondition gate.** The protocol assumes the toolchain has already run.
-   The per-edit hook runs ruff and ty on every edit and the controller runs ty
-   at its checkpoints, so trust that: do not run a project-wide `ty check`
-   yourself. If the dispatcher hands you a ty status that is not green, report
-   the types as broken and stop — do not audit type-broken code; if no status
-   is given, proceed. In audit mode (when a caller says so), follow the caller's
-   instruction on ty — run it for information if asked, note its status, and
-   never stop on a non-green result. Do not re-run or report ruff; the per-edit
-   hook owns it.
+   The per-edit hook applies ruff's autofixes on every edit, and the
+   `check_stop.py` hook sweeps the session's changed files with ruff and ty
+   before any review is dispatched, so trust that: do not run a project-wide
+   `ty check` yourself. If the dispatcher hands you a ty status that is not
+   green, report the types as broken and stop — do not audit type-broken
+   code; if no status is given, proceed. In audit mode (when a caller says
+   so), follow the caller's instruction on ty — run it for information if
+   asked, note its status, and never stop on a non-green result. Do not
+   re-run or report ruff; the per-edit hook owns it.
 3. **Static scan.** Unless the caller put you in audit mode, clear the
    mechanically-decidable rules with the scanner before spending judgment. Find
    it and run it on the files under review (it takes a file or a directory):
