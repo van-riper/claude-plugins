@@ -111,6 +111,7 @@ SEVERITY = {
     "broad-except": "blocker",
     "over-nested": "blocker",
     "sphinx-markup": "blocker",
+    "docstring-repeats-type": "blocker",
     "missing-public-docstring": "warning",
     "missing-module-docstring": "warning",
     "cryptic-identifier": "warning",
@@ -128,6 +129,15 @@ _SPHINX_MARKUP = re.compile(
     r"|:(?:returns?|rtype):"
     r"|:[a-zA-Z]+:`",
 )
+
+# Google-style Args entries carry an optional `name (type):` form, and a
+# Returns/Yields section may lead with a bare type before its colon. Both
+# are the only two syntactic forms that echo a type in a fixed, matchable
+# position; free-form prose restating a type is a judgment call instead.
+_ARGS_PARAM_TYPE_RE = re.compile(
+    r"^[ \t]*(\w+)\s*\(([^()]+)\)\s*:", re.MULTILINE
+)
+_RETURN_TYPE_RE = re.compile(r"(?:Returns|Yields):\s*\n[ \t]*([^\n:]+):")
 
 
 @dataclass
@@ -423,6 +433,37 @@ def _sphinx_docstrings(tree: ast.Module) -> list[int]:
     return lines
 
 
+def _docstring_repeats_type(
+    func: ast.FunctionDef | ast.AsyncFunctionDef, doc: str
+) -> bool:
+    """Report whether the docstring echoes a type its signature already gives.
+
+    Args:
+        func: Function or method the docstring belongs to.
+        doc: The function's docstring text.
+
+    Returns:
+        True if an Args entry or the Returns/Yields line repeats, verbatim,
+        the exact annotation text the signature already carries.
+    """
+    args = func.args
+    annotated = {
+        arg.arg: ast.unparse(arg.annotation)
+        for arg in [*args.posonlyargs, *args.args, *args.kwonlyargs]
+        if arg.arg not in {"self", "cls"} and arg.annotation is not None
+    }
+    for name, doc_type in _ARGS_PARAM_TYPE_RE.findall(doc):
+        if annotated.get(name) == doc_type.strip():
+            return True
+    if func.returns is not None:
+        match = _RETURN_TYPE_RE.search(doc)
+        if match is not None and match.group(1).strip() == ast.unparse(
+            func.returns
+        ):
+            return True
+    return False
+
+
 def _public_def_findings(
     func: ast.FunctionDef | ast.AsyncFunctionDef,
 ) -> list[Finding]:
@@ -432,12 +473,15 @@ def _public_def_findings(
         func: A public function or method definition.
 
     Returns:
-        Findings for a missing docstring, annotation gaps, or a mutable
-        default argument.
+        Findings for a missing docstring, a docstring that echoes an
+        annotated type, annotation gaps, or a mutable default argument.
     """
     findings: list[Finding] = []
-    if ast.get_docstring(func) is None:
+    doc = ast.get_docstring(func)
+    if doc is None:
         findings.append(_make("missing-public-docstring", func.lineno))
+    elif _docstring_repeats_type(func, doc):
+        findings.append(_make("docstring-repeats-type", func.body[0].lineno))
     if annotation_gaps(func):
         findings.append(_make("missing-annotation", func.lineno))
     if has_mutable_default(func):

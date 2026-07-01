@@ -34,3 +34,27 @@ def documented(value: int) -> int:
         The same integer.
     """
     return value
+
+
+def args_type_repeated(count: int) -> int:
+    """Double a count.
+
+    Args:
+        count (int): The number to double.
+
+    Returns:
+        The doubled count.
+    """
+    return count * 2
+
+
+def return_type_repeated(value: int) -> int:
+    """Return the value, unchanged.
+
+    Args:
+        value: Any integer.
+
+    Returns:
+        int: The same integer.
+    """
+    return value

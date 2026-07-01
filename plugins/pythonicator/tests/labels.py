@@ -29,6 +29,8 @@ SCANNER: dict[str, list[tuple[str, int]]] = {
         ("missing-public-docstring", 5),  # undocumented has no docstring
         ("sphinx-markup", 14),  # backtick uses double backticks
         ("sphinx-markup", 19),  # field_list uses :param: and :returns:
+        ("docstring-repeats-type", 40),  # count (int) echoes the annotation
+        ("docstring-repeats-type", 52),  # Returns: int echoes the annotation
     ],
     "nesting.py": [
         ("over-nested", 6),  # too_deep nests five deep

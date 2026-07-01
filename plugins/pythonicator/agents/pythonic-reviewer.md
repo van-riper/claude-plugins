@@ -47,8 +47,9 @@ holds precedence and the Zen if you need them.
 
    It prints JSON. Its findings — `legacy-typing`, `missing-annotation`,
    `mutable-default`, `broad-except`, `over-nested`, `sphinx-markup`,
-   `missing-public-docstring`, `missing-module-docstring`, `cryptic-identifier`,
-   and `unparseable` — are decided. Fold them into your report as-is, mapping
+   `docstring-repeats-type`, `missing-public-docstring`,
+   `missing-module-docstring`, `cryptic-identifier`, and `unparseable` — are
+   decided. Fold them into your report as-is, mapping
    each to its canon section and rule, and do not re-derive them by hand. Spend
    the judgment review only on what the scanner cannot decide. In audit mode,
    skip this step: the `pythonic-audit` skill runs the scanner whole-repo and

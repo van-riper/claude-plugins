@@ -73,6 +73,45 @@ def clamp(value: int) -> int:
     return value
 '''
 
+_ARGS_TYPE_REPEATED_SRC = '''"""Module."""
+
+
+def double(count: int) -> int:
+    """Double a count.
+
+    Args:
+        count (int): The number to double.
+    """
+    return count * 2
+'''
+
+_RETURN_TYPE_REPEATED_SRC = '''"""Module."""
+
+
+def clamp(value: int) -> int:
+    """Return the value, unchanged.
+
+    Returns:
+        int: The same integer.
+    """
+    return value
+'''
+
+_PROSE_TYPE_RESTATED_SRC = '''"""Module."""
+
+
+def total(prices: list[float]) -> float:
+    """Add up the prices.
+
+    Args:
+        prices: A list of floats.
+
+    Returns:
+        A float.
+    """
+    return sum(prices)
+'''
+
 
 def _rules(src: str) -> set[str]:
     """Return the set of rule keys the scanner reports for source.
@@ -177,6 +216,25 @@ def test_sphinx_field_list_flagged() -> None:
 def test_plain_google_docstring_not_flagged() -> None:
     """A plain Google docstring does not trip sphinx-markup."""
     assert "sphinx-markup" not in _rules(_PLAIN_DOCSTRING_SRC)
+
+
+def test_args_type_repeated_flagged() -> None:
+    """An Args entry echoing its parameter's exact annotation is flagged."""
+    assert "docstring-repeats-type" in _rules(_ARGS_TYPE_REPEATED_SRC)
+
+
+def test_return_type_repeated_flagged() -> None:
+    """A Returns line leading with the exact return annotation is flagged."""
+    assert "docstring-repeats-type" in _rules(_RETURN_TYPE_REPEATED_SRC)
+
+
+def test_prose_type_restatement_not_flagged() -> None:
+    """A type restated in prose, not exact annotation text, is not flagged.
+
+    Free-form restating like "a list of floats" is a judgment call; only an
+    exact echo of the annotation text is mechanically decidable.
+    """
+    assert "docstring-repeats-type" not in _rules(_PROSE_TYPE_RESTATED_SRC)
 
 
 def test_unparseable_flagged() -> None:

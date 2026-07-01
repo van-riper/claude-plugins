@@ -12,12 +12,12 @@ Judgment checks no tool catches:
 
 - A module docstring inventories its functions and classes instead of describing the module's purpose.
 - A comment names a variable, parameter, or function rather than the concept behind it.
-- A docstring restates types the annotations already give, or describes implementation over contract.
+- A docstring restates a type in its own prose, worded differently from the annotation, or describes implementation over contract.
 - A `TODO` or `FIXME` carries no owner or issue reference.
 
 Acceptable: a one-line docstring on a trivial function or method.
 
-Tooling covers docstring presence and style; do not re-flag those.
+Tooling covers docstring presence, style, and an Args or Returns entry that echoes an annotation's exact type text; do not re-flag those.
 
 ## Docstrings
 
