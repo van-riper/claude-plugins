@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import json
-import subprocess
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -12,24 +11,6 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import check_edit
-
-
-def _completed(
-    code: int, out: str, err: str
-) -> subprocess.CompletedProcess[str]:
-    """Build a completed process for the diagnostics helper.
-
-    Args:
-        code: The process return code.
-        out: Captured stdout.
-        err: Captured stderr.
-
-    Returns:
-        A completed process carrying those values.
-    """
-    return subprocess.CompletedProcess(
-        args=["tool"], returncode=code, stdout=out, stderr=err
-    )
 
 
 def _run_main(payload_text: str) -> tuple[int, str]:
@@ -49,21 +30,6 @@ def _run_main(payload_text: str) -> tuple[int, str]:
     ):
         code = check_edit.main()
     return code, stdout.getvalue()
-
-
-def test_field_reads_mapping_key() -> None:
-    """_field returns the value when the input is a dict with the key."""
-    assert check_edit._field({"key": 7}, "key") == 7
-
-
-def test_field_none_for_non_mapping() -> None:
-    """_field returns None when the input is not a dict."""
-    assert check_edit._field("nope", "key") is None
-
-
-def test_field_none_for_missing_key() -> None:
-    """_field returns None when the key is absent."""
-    assert check_edit._field({"a": 1}, "b") is None
 
 
 def test_edited_python_file_accepts_existing_py(tmp_path: Path) -> None:
@@ -95,21 +61,6 @@ def test_edited_python_file_handles_bad_payload() -> None:
     assert check_edit._edited_python_file({"tool_input": {}}) is None
 
 
-def test_diagnostics_empty_on_success() -> None:
-    """A zero exit code produces no diagnostics."""
-    assert not check_edit._diagnostics(_completed(0, "ignored", ""))
-
-
-def test_diagnostics_reports_output_on_failure() -> None:
-    """A nonzero exit code returns the combined, stripped output."""
-    assert check_edit._diagnostics(_completed(1, "bad\n", "err")) == "bad\nerr"
-
-
-def test_diagnostics_none_is_empty() -> None:
-    """A missing process yields no diagnostics."""
-    assert not check_edit._diagnostics(None)
-
-
 def test_main_zero_on_invalid_json() -> None:
     """Invalid JSON on stdin fails open with no output."""
     code, out = _run_main("not json at all")
@@ -127,8 +78,25 @@ def test_main_ignores_non_python(tmp_path: Path) -> None:
     assert not out
 
 
-def test_main_silent_when_tools_absent(tmp_path: Path) -> None:
-    """With neither tool resolvable, the hook reports nothing."""
+def test_main_silent_after_fixing(tmp_path: Path) -> None:
+    """A Python edit runs the two fixers but writes nothing to stdout."""
+    target = tmp_path / "module.py"
+    target.write_text("value = 1\n", encoding="utf-8")
+    payload = json.dumps({"tool_input": {"file_path": str(target)}})
+    with (
+        mock.patch.object(
+            check_edit.toolrunner, "tool_command", return_value=["ruff"]
+        ),
+        mock.patch.object(check_edit.hookbase, "run_command") as run,
+    ):
+        code, out = _run_main(payload)
+    assert code == 0
+    assert not out
+    assert run.call_count == 2
+
+
+def test_main_silent_when_tool_absent(tmp_path: Path) -> None:
+    """With ruff unresolvable, the hook still writes nothing."""
     target = tmp_path / "module.py"
     target.write_text("value = 1\n", encoding="utf-8")
     payload = json.dumps({"tool_input": {"file_path": str(target)}})
