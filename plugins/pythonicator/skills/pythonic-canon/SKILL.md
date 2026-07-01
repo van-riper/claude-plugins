@@ -46,7 +46,7 @@ reports STALE, rebuild with `python3 src/sync_canon.py`.
 
 | Area | Rule |
 | ---- | ---- |
-| Lines | Wrap at 80, hard max 100. 4 spaces, never tabs. |
+| Lines | Hard cap at 80 columns. 4 spaces, never tabs. |
 | Imports | Absolute only; no relative, no `import *`. Type-only imports under `if TYPE_CHECKING:` plus `from __future__ import annotations`. |
 | Typing | `list[str]`, `dict[str, int]`, `X \| None`; never `Optional`/`Union`/`typing.List`. `collections.abc` for params. Annotate every public signature, not `self`/`cls`. |
 | Aliases | Name meaningful primitives with `type`: `type UserId = int`. |

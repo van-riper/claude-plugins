@@ -17,7 +17,7 @@ Judgment checks no tool catches:
 
 Acceptable: no blank lines in a short, single-phase function; a long URL or path past the limit; conventional aliases such as `np` and `pd`.
 
-Tooling covers indentation, blank-line caps, the 100-column hard cap, import grouping and sort order, and the bans on relative and wildcard imports; do not re-flag those.
+Tooling covers indentation, blank-line caps, the 80-column hard cap, import grouping and sort order, and the bans on relative and wildcard imports; do not re-flag those.
 
 ## Blank Lines
 
@@ -71,7 +71,7 @@ def mean_value(rows):
 
 Format and lint with Ruff; the formatter's layout **must not** be hand-edited (see Formatting). Type-check with ty, reaching for `mypy` or `pyright` only where a project already standardizes on one.
 
-Lines **should** wrap at 80 columns and **must not** exceed 100, with URLs, paths, and whitespace-free string constants exempt. This matches Line Length.
+Lines **must not** exceed 80 columns, with URLs, paths, and whitespace-free string constants exempt. This matches Line Length.
 
 A consistent limit keeps code readable in side-by-side views and narrow terminals. A few constructs resist wrapping, such as URLs and long log strings. Let those run past the limit rather than break them awkwardly.
 
@@ -103,6 +103,6 @@ Hand-formatting wastes time and invites drift. The point of an agreed style is t
 
 ## Core principle: Line Length
 
-Source lines **should** wrap at 80 characters and **must not** exceed 100.
+Source lines **should not** exceed 80 characters.
 
 A consistent limit keeps code readable in side-by-side views and narrow terminals. A few constructs resist wrapping, such as URLs and long log strings. Let those run past the limit rather than break them awkwardly.
