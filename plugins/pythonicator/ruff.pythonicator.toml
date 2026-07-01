@@ -7,7 +7,6 @@ required-version = ">=0.15"
 line-length = 80
 preview = true
 src = ["src", "test"]
-target-version = "py312"
 
 [format]
 preview = true
