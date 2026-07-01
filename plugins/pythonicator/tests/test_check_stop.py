@@ -149,3 +149,18 @@ def test_sweep_reports_ruff_findings() -> None:
     ):
         findings = check_stop._sweep([Path("f.py")])
     assert findings == ["ruff:\nf.py:1:1: F401 x"]
+
+
+def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:
+    """_changed_python_files returns changed and new .py, not clean ones."""
+    _init_repo(tmp_path)
+    tracked = tmp_path / "tracked.py"
+    tracked.write_text("a = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "tracked.py")
+    _git(tmp_path, "commit", "-m", "add tracked")
+    tracked.write_text("a = 2\n", encoding="utf-8")
+    untracked = tmp_path / "untracked.py"
+    untracked.write_text("b = 1\n", encoding="utf-8")
+    result = check_stop._changed_python_files(tmp_path)
+    assert set(result) == {tracked, untracked}
+    assert (tmp_path / "base.py") not in result
