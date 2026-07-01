@@ -1,0 +1,14 @@
+[tool.ruff]
+extend = "../pythonicator/ruff.pythonicator.toml"
+target-version = "py312"
+
+[tool.ruff.lint.per-file-ignores]
+"src/*.py" = ["INP001"]
+"tests/*.py" = ["INP001", "S101", "PLR2004", "SLF001"]
+
+[tool.ty.environment]
+extra-paths = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+testpaths = ["tests"]

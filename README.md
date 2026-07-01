@@ -13,6 +13,9 @@ A personal Claude Code plugin marketplace.
 - **pythonicator**: enforces the shipped Python styleguide on agentic Python
   work: a derived canon, a Ruff and ty PostToolUse hook, and a conformance
   reviewer agent. See the [README](plugins/pythonicator/README.md).
+- **bash-blacklist**: blocks bash command prefixes before Claude runs them,
+  configured via the `CLAUDE_BASH_BLACKLIST` environment variable. See the
+  [README](plugins/bash-blacklist/README.md).
 
 ## Updating
 

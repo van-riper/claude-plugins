@@ -8,6 +8,11 @@
       "name": "pythonicator",
       "source": "./plugins/pythonicator",
       "description": "Enforce the personal Python styleguide as the canonical source of truth for agentic Python work: a derived canon, a ruff/ty PostToolUse hook, and a conformance reviewer agent."
+    },
+    {
+      "name": "bash-blacklist",
+      "source": "./plugins/bash-blacklist",
+      "description": "Blocks specific bash commands before Claude runs them via a PreToolUse hook."
     }
   ]
 }

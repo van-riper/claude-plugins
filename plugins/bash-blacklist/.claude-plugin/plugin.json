@@ -1,0 +1,15 @@
+{
+  "name": "bash-blacklist",
+  "description": "Blocks specific bash commands before Claude runs them via a PreToolUse hook.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "van-riper"
+  },
+  "keywords": [
+    "hooks",
+    "pretooluse",
+    "blacklist",
+    "bash"
+  ]
+}
