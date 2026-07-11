@@ -94,6 +94,54 @@ def _diagnostics(result: subprocess.CompletedProcess[str] | None) -> str:
     return (result.stdout + result.stderr).strip()
 
 
+def _venv_for(path: Path) -> Path | None:
+    """Find the nearest ancestor .venv directory for a changed file.
+
+    ty resolves imports from wherever it runs, which is the repo root, not
+    the subproject the file actually lives in. Pointing it at the right
+    subproject's venv (`ty check --python <venv>`) fixes that without
+    needing `uv run`. See toolrunner.tool_command's docstring for why a
+    bare PATH lookup misses subproject venvs.
+
+    Args:
+        path: A changed .py file to locate the owning venv for.
+
+    Returns:
+        The nearest ancestor `.venv` directory, searching upward from
+        path's own directory, or None if none exists.
+    """
+    for directory in (path.parent, *path.parent.parents):
+        candidate = directory / ".venv"
+        if candidate.is_dir():
+            return candidate
+    return None
+
+
+def _group_by_venv(
+    paths: list[Path],
+) -> tuple[dict[Path, list[Path]], list[Path]]:
+    """Split changed files by nearest ancestor .venv, for grouped ty runs.
+
+    Args:
+        paths: The changed .py files ty will check.
+
+    Returns:
+        A (grouped, unversioned) pair: grouped maps each discovered
+        .venv to the files under it, so each venv gets one `ty check
+        --python <venv>` call; unversioned holds files with no ancestor
+        .venv, left for today's bare `ty check` fallback.
+    """
+    grouped: dict[Path, list[Path]] = {}
+    unversioned: list[Path] = []
+    for path in paths:
+        venv = _venv_for(path)
+        if venv is None:
+            unversioned.append(path)
+        else:
+            grouped.setdefault(venv, []).append(path)
+    return grouped, unversioned
+
+
 def _sweep(paths: list[Path]) -> list[str]:
     """Run ruff and ty across the changed files and collect findings.
 
@@ -117,9 +165,33 @@ def _sweep(paths: list[Path]) -> list[str]:
             findings.append(f"ruff:\n{ruff_out}")
     ty = toolrunner.tool_command("ty")
     if ty is not None:
-        ty_out = _diagnostics(
-            hookbase.run_command([*ty, "check", *args], TIMEOUT_SECONDS)
-        )
+        ty_outs: list[str] = []
+        grouped, unversioned = _group_by_venv(paths)
+        for venv, group_paths in grouped.items():
+            ty_outs.append(
+                _diagnostics(
+                    hookbase.run_command(
+                        [
+                            *ty,
+                            "check",
+                            "--python",
+                            str(venv),
+                            *(str(p) for p in group_paths),
+                        ],
+                        TIMEOUT_SECONDS,
+                    )
+                )
+            )
+        if unversioned:
+            ty_outs.append(
+                _diagnostics(
+                    hookbase.run_command(
+                        [*ty, "check", *(str(p) for p in unversioned)],
+                        TIMEOUT_SECONDS,
+                    )
+                )
+            )
+        ty_out = "\n".join(out for out in ty_outs if out)
         if ty_out:
             findings.append(f"ty:\n{ty_out}")
     return findings

@@ -151,6 +151,64 @@ def test_sweep_reports_ruff_findings() -> None:
     assert findings == ["ruff:\nf.py:1:1: F401 x"]
 
 
+def test_venv_for_finds_nearest_ancestor(tmp_path: Path) -> None:
+    """_venv_for finds a .venv in a parent directory of the changed file."""
+    venv = tmp_path / "sub" / ".venv"
+    venv.mkdir(parents=True)
+    changed = tmp_path / "sub" / "pkg" / "mod.py"
+    changed.parent.mkdir()
+    changed.write_text("x = 1\n", encoding="utf-8")
+    assert check_stop._venv_for(changed) == venv
+
+
+def test_venv_for_missing_returns_none(tmp_path: Path) -> None:
+    """_venv_for returns None when no ancestor .venv exists."""
+    changed = tmp_path / "mod.py"
+    changed.write_text("x = 1\n", encoding="utf-8")
+    assert check_stop._venv_for(changed) is None
+
+
+def test_group_by_venv_splits_grouped_and_unversioned(tmp_path: Path) -> None:
+    """_group_by_venv groups files by owning venv, else unversioned."""
+    venv = tmp_path / "sub" / ".venv"
+    venv.mkdir(parents=True)
+    in_venv = tmp_path / "sub" / "mod.py"
+    in_venv.write_text("x = 1\n", encoding="utf-8")
+    bare = tmp_path / "other.py"
+    bare.write_text("y = 1\n", encoding="utf-8")
+    grouped, unversioned = check_stop._group_by_venv([in_venv, bare])
+    assert grouped == {venv: [in_venv]}
+    assert unversioned == [bare]
+
+
+def test_sweep_scopes_ty_to_each_files_venv(tmp_path: Path) -> None:
+    """_sweep runs ty once per venv with --python, once for the rest."""
+    venv = tmp_path / "sub" / ".venv"
+    venv.mkdir(parents=True)
+    in_venv = tmp_path / "sub" / "mod.py"
+    in_venv.write_text("x = 1\n", encoding="utf-8")
+    bare = tmp_path / "other.py"
+    bare.write_text("y = 1\n", encoding="utf-8")
+    calls = []
+
+    def fake_run_command(cmd: list[str], _timeout: int) -> None:
+        calls.append(cmd)
+
+    with (
+        mock.patch.object(
+            check_stop.toolrunner,
+            "tool_command",
+            side_effect=lambda name: [name] if name == "ty" else None,
+        ),
+        mock.patch.object(
+            check_stop.hookbase, "run_command", side_effect=fake_run_command
+        ),
+    ):
+        check_stop._sweep([in_venv, bare])
+    assert ["ty", "check", "--python", str(venv), str(in_venv)] in calls
+    assert ["ty", "check", str(bare)] in calls
+
+
 def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:
     """_changed_python_files returns changed and new .py, not clean ones."""
     _init_repo(tmp_path)
