@@ -37,7 +37,7 @@ def _init_repo(repo: Path) -> None:
     _git(repo, "config", "user.name", "t")
     (repo / "base.py").write_text('"""Base."""\n', encoding="utf-8")
     _git(repo, "add", "base.py")
-    _git(repo, "commit", "-m", "init")
+    _git(repo, "commit", "-m", "chore: initial commit")
 
 
 def _run_main(payload: dict[str, object]) -> tuple[int, str]:
@@ -157,7 +157,7 @@ def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:
     tracked = tmp_path / "tracked.py"
     tracked.write_text("a = 1\n", encoding="utf-8")
     _git(tmp_path, "add", "tracked.py")
-    _git(tmp_path, "commit", "-m", "add tracked")
+    _git(tmp_path, "commit", "-m", "chore: add tracked")
     tracked.write_text("a = 2\n", encoding="utf-8")
     untracked = tmp_path / "untracked.py"
     untracked.write_text("b = 1\n", encoding="utf-8")
