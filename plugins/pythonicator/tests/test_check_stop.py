@@ -205,8 +205,16 @@ def test_sweep_scopes_ty_to_each_files_venv(tmp_path: Path) -> None:
         ),
     ):
         check_stop._sweep([in_venv, bare])
-    assert ["ty", "check", "--python", str(venv), str(in_venv)] in calls
-    assert ["ty", "check", str(bare)] in calls
+    assert [
+        "ty",
+        "check",
+        "--output-format",
+        "concise",
+        "--python",
+        str(venv),
+        str(in_venv),
+    ] in calls
+    assert ["ty", "check", "--output-format", "concise", str(bare)] in calls
 
 
 def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:

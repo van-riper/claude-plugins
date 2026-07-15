@@ -174,6 +174,8 @@ def _sweep(paths: list[Path]) -> list[str]:
                         [
                             *ty,
                             "check",
+                            "--output-format",
+                            "concise",
                             "--python",
                             str(venv),
                             *(str(p) for p in group_paths),
@@ -186,7 +188,13 @@ def _sweep(paths: list[Path]) -> list[str]:
             ty_outs.append(
                 _diagnostics(
                     hookbase.run_command(
-                        [*ty, "check", *(str(p) for p in unversioned)],
+                        [
+                            *ty,
+                            "check",
+                            "--output-format",
+                            "concise",
+                            *(str(p) for p in unversioned),
+                        ],
                         TIMEOUT_SECONDS,
                     )
                 )
