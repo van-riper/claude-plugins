@@ -217,6 +217,110 @@ def test_sweep_scopes_ty_to_each_files_venv(tmp_path: Path) -> None:
     assert ["ty", "check", "--output-format", "concise", str(bare)] in calls
 
 
+def _transcript(tmp_path: Path, entries: list[list[dict[str, object]]]) -> Path:
+    """Write a JSONL transcript of assistant messages to tmp_path.
+
+    Args:
+        tmp_path: The directory to write the transcript into.
+        entries: One `message.content` list per line.
+
+    Returns:
+        The path to the written transcript file.
+    """
+    path = tmp_path / "transcript.jsonl"
+    lines = [
+        json.dumps({"message": {"content": content}}) for content in entries
+    ]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_skill_invoked_finds_bare_and_namespaced_call(tmp_path: Path) -> None:
+    """_skill_invoked matches both bare and plugin-namespaced skill names."""
+    bare = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Skill",
+                    "input": {"skill": "pythonic-canon"},
+                }
+            ]
+        ],
+    )
+    namespaced = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Skill",
+                    "input": {"skill": "pythonicator:pythonic-canon"},
+                }
+            ]
+        ],
+    )
+    assert check_stop._skill_invoked(bare, "pythonic-canon")
+    assert check_stop._skill_invoked(namespaced, "pythonic-canon")
+
+
+def test_skill_invoked_false_when_absent(tmp_path: Path) -> None:
+    """_skill_invoked returns False when no matching call appears."""
+    transcript = _transcript(
+        tmp_path, [[{"type": "tool_use", "name": "Edit", "input": {}}]]
+    )
+    assert not check_stop._skill_invoked(transcript, "pythonic-canon")
+
+
+def test_skill_invoked_fails_open_on_missing_transcript(tmp_path: Path) -> None:
+    """_skill_invoked treats an unreadable transcript as invoked."""
+    assert check_stop._skill_invoked(
+        tmp_path / "missing.jsonl", "pythonic-canon"
+    )
+
+
+def test_stop_blocks_when_skill_never_invoked(tmp_path: Path) -> None:
+    """Changed Python plus no skill invocation blocks the stop."""
+    _init_repo(tmp_path)
+    (tmp_path / "new.py").write_text("x = 1\n", encoding="utf-8")
+    transcript = _transcript(tmp_path, [])
+    with mock.patch.object(check_stop, "_sweep", return_value=[]):
+        code, out = _run_main({
+            "cwd": str(tmp_path),
+            "transcript_path": str(transcript),
+        })
+    assert code == 0
+    decision = json.loads(out)
+    assert decision["decision"] == "block"
+    assert "pythonic-canon skill" in decision["reason"]
+
+
+def test_stop_silent_when_skill_invoked(tmp_path: Path) -> None:
+    """Changed Python plus a skill invocation stays silent."""
+    _init_repo(tmp_path)
+    (tmp_path / "new.py").write_text("x = 1\n", encoding="utf-8")
+    transcript = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Skill",
+                    "input": {"skill": "pythonic-canon"},
+                }
+            ]
+        ],
+    )
+    with mock.patch.object(check_stop, "_sweep", return_value=[]):
+        code, out = _run_main({
+            "cwd": str(tmp_path),
+            "transcript_path": str(transcript),
+        })
+    assert code == 0
+    assert not out
+
+
 def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:
     """_changed_python_files returns changed and new .py, not clean ones."""
     _init_repo(tmp_path)

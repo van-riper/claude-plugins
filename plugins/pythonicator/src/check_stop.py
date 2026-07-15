@@ -6,12 +6,20 @@ those files, and blocks the stop until they are clean. The per-edit hook
 (check_edit.py) has already applied the safe autofixes silently; this hook is
 where anything left over is reported, once, before any judgment-review pass.
 
+It also closes the judgment layer's enforcement gap: unlike ruff and ty, the
+pythonic-canon skill only applies its naming/docstring/structure rules if the
+agent chooses to invoke it, and nothing else in the session requires that. So
+this hook reads the session transcript and blocks once more if Python changed
+but the skill was never invoked, the same way it already blocks on dirty ruff
+or ty output.
+
 Scoping to git's changed files keeps the sweep off pre-existing debt the agent
 never touched, and catches edits made by dispatched subagents too. The hook
 holds no state: every stop re-derives the file list and re-runs the tools, so a
 partial fix simply shrinks the next report.
 
-Never raises: a missing git or tool fails open and lets the stop proceed.
+Never raises: a missing git, tool, or transcript fails open and lets the stop
+proceed.
 """
 
 from __future__ import annotations
@@ -205,19 +213,70 @@ def _sweep(paths: list[Path]) -> list[str]:
     return findings
 
 
+SKILL_REMINDER = (
+    "judgment skill:\nThis session edited Python but never invoked the "
+    "pythonic-canon skill, so its judgment checklist (naming, docstrings, "
+    "structure, complexity) was never applied. Invoke the pythonic-canon "
+    "skill and walk its judgment checklist against the files you changed."
+)
+
+
+def _skill_invoked(transcript_path: Path, skill_name: str) -> bool:
+    """Return whether the transcript shows a Skill call for skill_name.
+
+    ponytail: a Skill tool_use is a proxy for the review happening, not
+    proof it was thorough; a stronger check would need to inspect what the
+    agent did with the skill's content.
+
+    Args:
+        transcript_path: The session's JSONL transcript.
+        skill_name: The bare skill name to look for, e.g. "pythonic-canon".
+
+    Returns:
+        True when a matching call is found or the transcript cannot be
+        read (an unreadable transcript is not evidence of a skipped
+        skill), else False.
+    """
+    try:
+        lines = transcript_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return True
+    for raw_line in lines:
+        try:
+            entry = json.loads(raw_line)
+        except json.JSONDecodeError:
+            continue
+        content = hookbase.field(hookbase.field(entry, "message"), "content")
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if not (
+                isinstance(block, dict)
+                and block.get("type") == "tool_use"
+                and block.get("name") == "Skill"
+            ):
+                continue
+            skill = hookbase.field(block.get("input"), "skill")
+            if (
+                isinstance(skill, str)
+                and skill.rsplit(":", 1)[-1] == skill_name
+            ):
+                return True
+    return False
+
+
 def _block(findings: list[str]) -> None:
     """Write a Stop-blocking decision carrying the sweep findings.
 
     Args:
-        findings: One text block per tool that reported problems.
+        findings: One text block per check that reported a problem.
     """
     body = "\n\n".join(findings)
     reason = (
-        "pythonic-canon: the mechanical sweep found issues in the files you "
-        "changed this session. Fix them before finishing, so the judgment "
-        "review starts from a clean mechanical layer. Attempt each fix once; "
-        "if a finding survives a real attempt, explain it to the user rather "
-        "than retrying indefinitely.\n\n" + body
+        "pythonic-canon: finish-blocking checks failed on the files you "
+        "changed this session. Resolve each item below before finishing; "
+        "attempt each once, then explain to the user rather than retrying "
+        "indefinitely if it survives a real attempt.\n\n" + body
     )
     output = {"decision": "block", "reason": reason}
     sys.stdout.write(json.dumps(output))
@@ -225,6 +284,10 @@ def _block(findings: list[str]) -> None:
 
 def main() -> int:
     """Sweep the session's changed files, blocking the stop if any are dirty.
+
+    Also blocks when Python changed but the pythonic-canon skill was never
+    invoked this session, so the judgment layer gets the same enforcement
+    the mechanical ruff/ty sweep already has.
 
     Returns:
         Always 0; the hook fails open and never errors the stop.
@@ -247,6 +310,11 @@ def main() -> int:
     if not paths:
         return 0
     findings = _sweep(paths)
+    raw_transcript = hookbase.field(payload, "transcript_path")
+    if isinstance(raw_transcript, str) and raw_transcript:
+        transcript = Path(raw_transcript)
+        if not _skill_invoked(transcript, "pythonic-canon"):
+            findings.append(SKILL_REMINDER)
     if findings:
         _block(findings)
     return 0
