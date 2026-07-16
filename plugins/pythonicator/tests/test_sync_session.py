@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import io
 import json
 from typing import TYPE_CHECKING
@@ -77,6 +78,66 @@ def test_emit_session_notes_empty_writes_nothing() -> None:
     with mock.patch.object(sync_session.sys, "stdout", out):
         sync_session._emit_session_notes([])
     assert not out.getvalue()
+
+
+def _stale_vault(tmp_path: Path) -> Path:
+    """Write a minimal vault pair with no built canon yet, forcing a rebuild.
+
+    Args:
+        tmp_path: The directory to write the fake vault and refs dir into.
+
+    Returns:
+        The empty references directory sync_canon.build() will populate.
+    """
+    refs = tmp_path / "refs"
+    refs.mkdir()
+    (tmp_path / "core.md").write_text(
+        "## Conventions\nstuff\n", encoding="utf-8"
+    )
+    (tmp_path / "py.md").write_text(
+        "## Layout\nrules\n\n## Conventions\nmore\n\n## Foreword\nzen\n",
+        encoding="utf-8",
+    )
+    return refs
+
+
+def test_refresh_canon_suppresses_build_output(tmp_path: Path) -> None:
+    """A stale-canon rebuild never writes to the hook's real stdout."""
+    refs = _stale_vault(tmp_path)
+    out = io.StringIO()
+    with (
+        mock.patch.object(sync_session.sync_canon, "REFS_DIR", refs),
+        mock.patch.object(
+            sync_session.sync_canon, "CORE_DOC", tmp_path / "core.md"
+        ),
+        mock.patch.object(
+            sync_session.sync_canon, "PYTHON_DOC", tmp_path / "py.md"
+        ),
+        contextlib.redirect_stdout(out),
+    ):
+        sync_session._refresh_canon()
+    assert not out.getvalue()
+    assert list(refs.glob("*.md"))
+
+
+def test_main_stays_valid_json_when_canon_rebuilds(tmp_path: Path) -> None:
+    """A rebuild triggered from main() never corrupts the JSON output."""
+    refs = _stale_vault(tmp_path)
+    out = io.StringIO()
+    with (
+        mock.patch.object(sync_session.sync_canon, "REFS_DIR", refs),
+        mock.patch.object(
+            sync_session.sync_canon, "CORE_DOC", tmp_path / "core.md"
+        ),
+        mock.patch.object(
+            sync_session.sync_canon, "PYTHON_DOC", tmp_path / "py.md"
+        ),
+        mock.patch.object(sync_session, "_link_ruff_config"),
+        mock.patch.object(sync_session.sys, "stdout", out),
+    ):
+        sync_session.main()
+    if out.getvalue():
+        json.loads(out.getvalue())
 
 
 def test_installed_base_finds_match(tmp_path: Path) -> None:

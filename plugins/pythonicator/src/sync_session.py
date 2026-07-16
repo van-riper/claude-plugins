@@ -17,6 +17,8 @@ Any step failing leaves things as they were and never blocks the session.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import sys
 from pathlib import Path
@@ -99,12 +101,18 @@ def _emit_session_notes(notes: list[str]) -> None:
 
 
 def _refresh_canon() -> None:
-    """Rebuild a stale canon, but only from the development checkout."""
+    """Rebuild a stale canon, but only from the development checkout.
+
+    build() prints its own progress for its `--check`/CLI use; a
+    SessionStart hook's stdout is a single JSON blob instead, so that
+    output is captured and discarded rather than left to corrupt it.
+    """
     if INSTALLED_ROOT in Path(__file__).resolve().parents:
         return
     try:
         if sync_canon.is_stale():
-            sync_canon.build()
+            with contextlib.redirect_stdout(io.StringIO()):
+                sync_canon.build()
     except OSError:
         pass
 
