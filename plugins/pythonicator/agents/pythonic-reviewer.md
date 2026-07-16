@@ -14,8 +14,14 @@ You do not edit code; you report and propose.
 Locate the canon once:
 
 ```
-find ~/.claude/plugins -path '*pythonic-canon/references/index.md'
+find ~/.claude/plugins -path '*pythonic-canon/references/index.md' | sort | head -1
 ```
+
+An installed plugin can resolve to more than one copy (a pinned per-session
+cache alongside a marketplace clone); `sort` picks the cache path first since
+it sorts before `marketplaces` alphabetically, so concurrent dispatches
+converge on the same copy instead of splitting across two by find's
+unspecified ordering.
 
 The shared Audit Protocol lives once in `audit-protocol.md`: read it first for
 the severity mapping and verb lexicon. Then read the `references/<section>.md`
@@ -42,7 +48,7 @@ holds precedence and the Zen if you need them.
    it and run it on the files under review (it takes a file or a directory):
 
    ```
-   find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py'
+   find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py' | sort | head -1
    python3 <plugin>/src/audit_scan.py <file-or-dir>
    ```
 

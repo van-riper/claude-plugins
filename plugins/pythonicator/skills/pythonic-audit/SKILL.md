@@ -12,7 +12,10 @@ tiers: a static scan over every file, then a judgment review of each module.
 ## Procedure
 
 1. **Resolve the target.** Use the path the user gave, else the current
-   directory. Locate the plugin: `find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py'`.
+   directory. Locate the plugin: `find ~/.claude/plugins -path '*pythonicator*/src/audit_scan.py' | sort | head -1`
+   (an installed plugin can resolve to both a pinned cache copy and a
+   marketplace clone; sorting picks the cache copy first so every dispatch
+   this skill spawns reads the same canon).
 2. **Freshness.** Run `python3 <plugin>/src/sync_canon.py --check`; rebuild
    if stale so the review uses the current canon. (Skip quietly if the vault
    docs are absent on this machine.)
