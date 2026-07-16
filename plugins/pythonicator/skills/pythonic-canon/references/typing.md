@@ -32,6 +32,8 @@ Parameters **should** take the abstract types from `collections.abc`: `Iterable`
 
 A binding **should** be immutable by default; reach for a constant, a tuple, or a frozen dataclass first, and opt into mutation only where the logic needs it. Immutable data is easier to reason about and safe to share across threads.
 
+Tests for immutability **should** assert the concrete immutable type (`assert isinstance(value, MappingProxyType)`, or equivalent for other immutable wrappers) rather than asserting a `TypeError` on attempted mutation. A `Mapping`-annotated binding has no `__setitem__` to begin with, so ty flags `value["x"] = "y"` as a static type error before the test can even run it — the "obvious" `pytest.raises(TypeError)` form fails `ty check` as written.
+
 `Any` **should not** be used to silence the checker; it defeats the verification the annotations exist for. Reach for a precise type, a `Protocol`, or a type variable instead.
 
 Type-only imports **should** sit behind `if TYPE_CHECKING:`, below the other imports, so ty reads them with no runtime cost.
