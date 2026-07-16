@@ -23,8 +23,9 @@ tiers: a static scan over every file, then a judgment review of each module.
    capture the JSON. This is whole-repo, machine-decidable coverage.
 4. **Deep tier.** Group the discovered `.py` files by directory. Dispatch one
    `pythonic-reviewer` per directory, in **audit mode**: tell each reviewer
-   "Audit mode: run ty for information and note its status, but do NOT stop if
-   it is not green — proceed with the judgment review. The ruff restriction is
+   "Audit mode: run ty for information, scoped to your assigned target rather
+   than the whole project, and note its status, but do NOT stop if it is not
+   green — proceed with the judgment review. The ruff restriction is
    unchanged. Do not run audit_scan.py; this skill already ran the static tier
    and merges it." Ask each to return
    findings as a list of `file · line · section · rule · severity · why · fix`.

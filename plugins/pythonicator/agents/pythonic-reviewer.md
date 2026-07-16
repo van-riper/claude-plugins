@@ -41,8 +41,9 @@ holds precedence and the Zen if you need them.
    green, report the types as broken and stop — do not audit type-broken
    code; if no status is given, proceed. In audit mode (when a caller says
    so), follow the caller's instruction on ty — run it for information if
-   asked, note its status, and never stop on a non-green result. Do not
-   re-run or report ruff; the per-edit hook owns it.
+   asked, scoped to your assigned target rather than the whole project, note
+   its status, and never stop on a non-green result. Do not re-run or report
+   ruff; the per-edit hook owns it.
 3. **Static scan.** Unless the caller put you in audit mode, clear the
    mechanically-decidable rules with the scanner before spending judgment. Find
    it and run it on the files under review (it takes a file or a directory):
