@@ -1,9 +1,12 @@
-"""SessionStart hook: keep the global ruff config in step.
+"""SessionStart hook: nudge the canon skill and keep global ruff in step.
 
-It runs once per session and never blocks it. First it notes when the
-interpreter is below the supported Python floor or when ruff or ty cannot
-run, then keeps the global ruff config linked:
+It runs once per session and never blocks it:
 
+- Always surfaces an unconditional reminder to invoke the pythonic-canon
+  skill before writing Python this session (the proactive counterpart to
+  check_stop.py's reactive backstop), plus advisories for an unsupported
+  interpreter or missing tools, gated on whether the repo has any Python
+  at all so a docs-only session doesn't pay for notes it can't use.
 - Wherever an installed copy exists, snapshot its ruff.pythonicator.toml
   into the user config dir and make sure ~/.config/ruff/ruff.toml extends that
   snapshot. The snapshot lives in the user's own dir, so global lint keeps
@@ -24,6 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import hookbase
 import toolrunner
 
 INSTALLED_ROOT = Path.home() / ".claude" / "plugins"
@@ -79,6 +83,37 @@ def _tools_note() -> str | None:
         f"mechanical checks until you install {names}, or install uv as a "
         "fallback."
     )
+
+
+CANON_REMINDER = (
+    "pythonic-canon: before writing or editing Python this session, "
+    "invoke the pythonic-canon skill and apply its judgment checklist "
+    "(naming, docstrings, structure, complexity) as you write, not as a "
+    "revision pass afterward."
+)
+
+
+def _repo_has_python(cwd: Path) -> bool:
+    """Report whether cwd's git tree has any tracked or new .py file.
+
+    Fails open to True when cwd isn't a git work tree or git cannot run,
+    since an undetectable repo is not evidence it has no Python.
+
+    Args:
+        cwd: The directory the hook was invoked from.
+
+    Returns:
+        True if a `.py` file is tracked or newly added anywhere under
+        the repository root, else False.
+    """
+    root = hookbase.git_root(cwd)
+    if root is None:
+        return True
+    tracked = hookbase.git_lines(["ls-files", "--", "*.py"], root)
+    untracked = hookbase.git_lines(
+        ["ls-files", "--others", "--exclude-standard", "--", "*.py"], root
+    )
+    return bool(tracked or untracked)
 
 
 def _emit_session_notes(notes: list[str]) -> None:
@@ -153,7 +188,17 @@ def main() -> int:
     Returns:
         Always 0; the hook never blocks session start.
     """
-    notes = [note for note in (_python_note(), _tools_note()) if note]
+    try:
+        payload = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        payload = None
+    raw_cwd = hookbase.field(payload, "cwd")
+    cwd = Path(raw_cwd) if isinstance(raw_cwd, str) and raw_cwd else Path.cwd()
+    notes = [CANON_REMINDER]
+    if _repo_has_python(cwd):
+        notes = [
+            note for note in (_python_note(), _tools_note()) if note
+        ] + notes
     _emit_session_notes(notes)
     _link_ruff_config()
     return 0

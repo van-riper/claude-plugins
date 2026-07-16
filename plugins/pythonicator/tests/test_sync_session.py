@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 import json
+import subprocess
 from typing import TYPE_CHECKING
 from unittest import mock
 
@@ -11,6 +12,41 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 import sync_session
+
+
+def _git(repo: Path, *args: str) -> None:
+    """Run a git command in a repo, raising on failure.
+
+    Args:
+        repo: The repository directory.
+        args: The git arguments after `git`.
+    """
+    subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _run_main(payload: dict[str, object]) -> str:
+    """Run sync_session.main with a payload on stdin, capturing stdout.
+
+    Args:
+        payload: The SessionStart hook payload to feed as JSON.
+
+    Returns:
+        Whatever the hook wrote to stdout.
+    """
+    stdin = io.StringIO(json.dumps(payload))
+    stdout = io.StringIO()
+    with (
+        mock.patch.object(sync_session.sys, "stdin", stdin),
+        mock.patch.object(sync_session.sys, "stdout", stdout),
+        mock.patch.object(sync_session, "_link_ruff_config"),
+    ):
+        sync_session.main()
+    return stdout.getvalue()
 
 
 def test_python_note_none_when_supported() -> None:
@@ -77,6 +113,70 @@ def test_emit_session_notes_empty_writes_nothing() -> None:
     with mock.patch.object(sync_session.sys, "stdout", out):
         sync_session._emit_session_notes([])
     assert not out.getvalue()
+
+
+def test_repo_has_python_true_for_tracked_file(tmp_path: Path) -> None:
+    """A tracked .py file counts as Python present."""
+    _git(tmp_path, "init")
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "a.py")
+    assert sync_session._repo_has_python(tmp_path)
+
+
+def test_repo_has_python_true_for_untracked_file(tmp_path: Path) -> None:
+    """An unstaged new .py file still counts."""
+    _git(tmp_path, "init")
+    (tmp_path / "a.py").write_text("x = 1\n", encoding="utf-8")
+    assert sync_session._repo_has_python(tmp_path)
+
+
+def test_repo_has_python_false_when_none_present(tmp_path: Path) -> None:
+    """A repo with only non-Python tracked files returns False."""
+    _git(tmp_path, "init")
+    (tmp_path / "a.md").write_text("hi\n", encoding="utf-8")
+    _git(tmp_path, "add", "a.md")
+    assert not sync_session._repo_has_python(tmp_path)
+
+
+def test_repo_has_python_fails_open_outside_git(tmp_path: Path) -> None:
+    """A non-git directory fails open to True."""
+    assert sync_session._repo_has_python(tmp_path)
+
+
+def test_main_skips_env_notes_without_python(tmp_path: Path) -> None:
+    """main() drops environment notes but keeps CANON_REMINDER, sans Python."""
+    with (
+        mock.patch.object(sync_session, "_repo_has_python", return_value=False),
+        mock.patch.object(
+            sync_session, "_python_note", return_value="python note"
+        ),
+        mock.patch.object(
+            sync_session, "_tools_note", return_value="tools note"
+        ),
+    ):
+        out = _run_main({"cwd": str(tmp_path)})
+    context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+    assert "python note" not in context
+    assert "tools note" not in context
+    assert sync_session.CANON_REMINDER in context
+
+
+def test_main_keeps_env_notes_with_python(tmp_path: Path) -> None:
+    """main() keeps environment notes and CANON_REMINDER with Python present."""
+    with (
+        mock.patch.object(sync_session, "_repo_has_python", return_value=True),
+        mock.patch.object(
+            sync_session, "_python_note", return_value="python note"
+        ),
+        mock.patch.object(
+            sync_session, "_tools_note", return_value="tools note"
+        ),
+    ):
+        out = _run_main({"cwd": str(tmp_path)})
+    context = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+    assert "python note" in context
+    assert "tools note" in context
+    assert sync_session.CANON_REMINDER in context
 
 
 def test_installed_base_finds_match(tmp_path: Path) -> None:

@@ -16,14 +16,15 @@ It bundles three coordinated parts:
   sweeps the files git reports as changed this session with `ruff check` and
   `ty check` and blocks until they are clean. The sweep runs before any
   judgment review, so the reviewer starts from a green mechanical layer.
-- **`sync_session.py` hook:** a `SessionStart` hook with two fail-open steps.
-  In the development checkout it rebuilds the canon once per session when the
-  source styleguide has moved ahead, so the reviewer trusts it as current
-  without checking freshness on every dispatch (an installed copy ships its
-  canon as released and is never rebuilt in place). Wherever the plugin is
-  installed, it also snapshots `ruff.pythonicator.toml` into your config dir
-  and wires `~/.config/ruff/ruff.toml` to extend that snapshot, prepending one
-  line if it is missing.
+- **`sync_session.py` hook:** a `SessionStart` hook with fail-open steps. It
+  always surfaces a reminder to invoke the `pythonic-canon` skill before
+  writing Python this session, the proactive counterpart to `check_stop.py`'s
+  reactive backstop. It adds advisories for an unsupported interpreter or
+  missing tools, skipping those two when the repo has no Python at all, so a
+  docs-only session doesn't pay for notes it can't use. Wherever the plugin
+  is installed, it also snapshots `ruff.pythonicator.toml` into your config
+  dir and wires `~/.config/ruff/ruff.toml` to extend that snapshot,
+  prepending one line if it is missing.
 - **`pythonic-reviewer` agent:** a report-only subagent for a deliberate
   end-of-work pass. It clears the mechanical rules with the static scanner, then
   audits the judgment rules Ruff and ty cannot see, following the canon's Audit
