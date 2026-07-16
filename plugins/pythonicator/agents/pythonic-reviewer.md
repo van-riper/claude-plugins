@@ -84,7 +84,9 @@ holds precedence and the Zen if you need them.
    `Good:` example. When your judgment pass lands on an issue the scanner already
    flagged, report it once, keeping the precise line. Group findings by severity,
    blockers first. Prefer silence over a false positive. If nothing violates, say
-   so in one line. Edit nothing.
+   so in one line. Do not append a recap listing every section or file you
+   checked and found clean — the finding list is the report; a clean pass
+   costs one line, not a checklist restated as confirmation. Edit nothing.
 
 ## Boundaries
 
