@@ -122,6 +122,25 @@ unfixable = [
     # a body with one and swap in the real implementation on the next edit;
     # autofixing it away breaks that exact-match replacement.
     "PIE790",
+    # Flag a collapsible nested if, never autofix: merging `if a: if b:` into
+    # `if a and b:` before the inner condition grows its own elif/else
+    # forecloses that branch structure mid-sequence.
+    "SIM102",
+    # Flag a manual write-loop, never autofix: collapsing it into writelines
+    # before the next edit adds per-line processing removes the loop body
+    # that processing was going to live in.
+    "FURB122",
+    # Flag a manual set-mutation loop, same reason as FURB122: collapsing
+    # it into set.update before the next edit adds a filter or transform
+    # removes the loop body that logic was going to live in.
+    "FURB142",
+    # Flag a redundant else after return/raise/continue/break, never
+    # autofix: dedenting the else body before the next edit adds to it
+    # reshapes code an exact-match Edit may still be anchored on.
+    "RET505",
+    "RET506",
+    "RET507",
+    "RET508",
 ]
 
 [lint.flake8-tidy-imports]
