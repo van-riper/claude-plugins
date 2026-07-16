@@ -1,31 +1,29 @@
-"""SessionStart hook: keep the canon and the global ruff config in step.
+"""SessionStart hook: keep the global ruff config in step.
 
 It runs once per session and never blocks it. First it notes when the
 interpreter is below the supported Python floor or when ruff or ty cannot
-run, then runs two independent, fail-open steps:
+run, then keeps the global ruff config linked:
 
-- In the development checkout, rebuild the canon from the vault styleguide
-  when it has fallen behind, so the reviewer trusts it as current. An
-  installed copy ships its canon as released and is never rebuilt in place.
 - Wherever an installed copy exists, snapshot its ruff.pythonicator.toml
   into the user config dir and make sure ~/.config/ruff/ruff.toml extends that
   snapshot. The snapshot lives in the user's own dir, so global lint keeps
   working from it even after the plugin is uninstalled.
+
+Canon rebuilds from the vault styleguide are no longer part of this hook;
+run `python3 src/sync_canon.py [--check]` directly when the canon needs to
+catch up.
 
 Any step failing leaves things as they were and never blocks the session.
 """
 
 from __future__ import annotations
 
-import contextlib
-import io
 import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import sync_canon
 import toolrunner
 
 INSTALLED_ROOT = Path.home() / ".claude" / "plugins"
@@ -100,23 +98,6 @@ def _emit_session_notes(notes: list[str]) -> None:
     sys.stdout.write(json.dumps(output))
 
 
-def _refresh_canon() -> None:
-    """Rebuild a stale canon, but only from the development checkout.
-
-    build() prints its own progress for its `--check`/CLI use; a
-    SessionStart hook's stdout is a single JSON blob instead, so that
-    output is captured and discarded rather than left to corrupt it.
-    """
-    if INSTALLED_ROOT in Path(__file__).resolve().parents:
-        return
-    try:
-        if sync_canon.is_stale():
-            with contextlib.redirect_stdout(io.StringIO()):
-                sync_canon.build()
-    except OSError:
-        pass
-
-
 def _installed_base() -> Path | None:
     """Return the installed ruff.pythonicator.toml, or None if not installed."""
     pattern = "*/plugins/pythonicator/ruff.pythonicator.toml"
@@ -167,14 +148,13 @@ def _link_ruff_config() -> None:
 
 
 def main() -> int:
-    """Surface session notes, then run both upkeep steps; each fails open.
+    """Surface session notes, then run the ruff-config upkeep step.
 
     Returns:
         Always 0; the hook never blocks session start.
     """
     notes = [note for note in (_python_note(), _tools_note()) if note]
     _emit_session_notes(notes)
-    _refresh_canon()
     _link_ruff_config()
     return 0
 
