@@ -100,7 +100,29 @@ ignore = [
     "COM819",   # prohibited-trailing-comma
 ]
 
-unfixable = ["ERA001"]  # Flag commented-out code, never autofix it
+unfixable = [
+    # Flag commented-out code, never autofix it.
+    "ERA001",
+    # Flag unused imports, never autofix: the per-edit hook runs after every
+    # single Edit, so an import added ahead of the code that uses it (a
+    # common split across two edits) reads as unused mid-sequence and gets
+    # silently deleted before the usage lands. check_stop.py's end-of-session
+    # sweep still catches a genuinely-dead import; it just won't get erased
+    # out from under work still in progress.
+    "F401",
+    # Flag an unused noqa, never autofix: a noqa added ahead of the code that
+    # will need it (the violation doesn't exist yet mid-sequence) reads as
+    # stale and gets silently stripped before it has anything to suppress.
+    "RUF100",
+    # Flag an empty TYPE_CHECKING block, never autofix: one staged ahead of
+    # the type-only import that will populate it reads as dead scaffolding
+    # and gets silently removed before it holds anything.
+    "TC005",
+    # Flag a lone pass/... placeholder, never autofix: agents routinely stub
+    # a body with one and swap in the real implementation on the next edit;
+    # autofixing it away breaks that exact-match replacement.
+    "PIE790",
+]
 
 [lint.flake8-tidy-imports]
 ban-relative-imports = "all"
