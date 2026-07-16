@@ -101,8 +101,6 @@ ignore = [
 ]
 
 unfixable = [
-    # Flag commented-out code, never autofix it.
-    "ERA001",
     # Flag unused imports, never autofix: the per-edit hook runs after every
     # single Edit, so an import added ahead of the code that uses it (a
     # common split across two edits) reads as unused mid-sequence and gets
