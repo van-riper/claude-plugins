@@ -21,13 +21,19 @@ tiers: a static scan over every file, then a judgment review of each module.
    docs are absent on this machine.)
 3. **Static tier.** Run `python3 <plugin>/src/audit_scan.py <target>` and
    capture the JSON. This is whole-repo, machine-decidable coverage.
-4. **Deep tier.** Group the discovered `.py` files by directory. Dispatch one
-   `pythonic-reviewer` per directory, in **audit mode**: tell each reviewer
-   "Audit mode: run ty for information, scoped to your assigned target rather
-   than the whole project, and note its status, but do NOT stop if it is not
-   green — proceed with the judgment review. The ruff restriction is
-   unchanged. Do not run audit_scan.py; this skill already ran the static tier
-   and merges it." Ask each to return
+4. **Deep tier.** Group the discovered `.py` files by directory, then merge a
+   subdirectory into its parent's group when it's small relative to a
+   dispatch's fixed overhead (each dispatch reads the full canon reference set
+   and runs `ty` regardless of target size, so a leaf package under roughly
+   200 lines rarely earns its own dispatch — fold it into the sibling group
+   instead). Keep a subdirectory split out on its own when it's large or
+   self-contained enough to reward focused attention. Dispatch one
+   `pythonic-reviewer` per resulting group, in **audit mode**: tell each
+   reviewer "Audit mode: run ty for information, scoped to your assigned
+   target rather than the whole project, and note its status, but do NOT stop
+   if it is not green — proceed with the judgment review. The ruff restriction
+   is unchanged. Do not run audit_scan.py; this skill already ran the static
+   tier and merges it." Ask each to return
    findings as a list of `file · line · section · rule · severity · why · fix`.
 5. **Merge and report.** Combine the two tiers, then dedupe by underlying
    issue, not by exact key. The tiers use different rule names for the same
