@@ -40,38 +40,6 @@ import toolrunner
 TIMEOUT_SECONDS = 60
 
 
-def _git_lines(args: list[str], cwd: Path) -> list[str]:
-    """Run a git command in cwd and return its non-empty stdout lines.
-
-    Args:
-        args: The git subcommand and arguments after `git`.
-        cwd: The directory to run git in.
-
-    Returns:
-        Non-empty stdout lines, or an empty list if git could not run
-        or exited nonzero.
-    """
-    result = hookbase.run_command(
-        ["git", "-C", str(cwd), *args], TIMEOUT_SECONDS
-    )
-    if result is None or result.returncode != 0:
-        return []
-    return [line for line in result.stdout.splitlines() if line]
-
-
-def _git_root(cwd: Path) -> Path | None:
-    """Return the git work-tree root containing cwd, or None.
-
-    Args:
-        cwd: The directory the hook was invoked from.
-
-    Returns:
-        The repository root, or None when cwd is not in a git work tree.
-    """
-    lines = _git_lines(["rev-parse", "--show-toplevel"], cwd)
-    return Path(lines[0]) if lines else None
-
-
 def _changed_python_files(root: Path) -> list[Path]:
     """List the .py files changed this session, resolved under root.
 
@@ -82,8 +50,10 @@ def _changed_python_files(root: Path) -> list[Path]:
         Existing .py paths git reports as changed-vs-HEAD or newly
         untracked, de-duplicated and sorted.
     """
-    names = _git_lines(["diff", "--name-only", "HEAD"], root)
-    names += _git_lines(["ls-files", "--others", "--exclude-standard"], root)
+    names = hookbase.git_lines(["diff", "--name-only", "HEAD"], root)
+    names += hookbase.git_lines(
+        ["ls-files", "--others", "--exclude-standard"], root
+    )
     paths = {root / name for name in names if name.endswith(".py")}
     return sorted(path for path in paths if path.exists())
 
@@ -303,7 +273,7 @@ def main() -> int:
         return 0
     raw_cwd = hookbase.field(payload, "cwd")
     cwd = Path(raw_cwd) if isinstance(raw_cwd, str) and raw_cwd else Path.cwd()
-    root = _git_root(cwd)
+    root = hookbase.git_root(cwd)
     if root is None:
         return 0
     paths = _changed_python_files(root)

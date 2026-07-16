@@ -9,7 +9,10 @@ module, not a base class.
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 from typing import cast
+
+GIT_TIMEOUT_SECONDS = 60
 
 
 def field(mapping: object, key: str) -> object:
@@ -50,3 +53,33 @@ def run_command(
         )
     except (OSError, subprocess.SubprocessError):
         return None
+
+
+def git_lines(args: list[str], cwd: Path) -> list[str]:
+    """Run a git command in cwd and return its non-empty stdout lines.
+
+    Args:
+        args: The git subcommand and arguments after `git`.
+        cwd: The directory to run git in.
+
+    Returns:
+        Non-empty stdout lines, or an empty list if git could not run
+        or exited nonzero.
+    """
+    result = run_command(["git", "-C", str(cwd), *args], GIT_TIMEOUT_SECONDS)
+    if result is None or result.returncode != 0:
+        return []
+    return [line for line in result.stdout.splitlines() if line]
+
+
+def git_root(cwd: Path) -> Path | None:
+    """Return the git work-tree root containing cwd, or None.
+
+    Args:
+        cwd: The directory to check.
+
+    Returns:
+        The repository root, or None when cwd is not in a git work tree.
+    """
+    lines = git_lines(["rev-parse", "--show-toplevel"], cwd)
+    return Path(lines[0]) if lines else None
