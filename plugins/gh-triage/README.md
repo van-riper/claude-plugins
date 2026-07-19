@@ -39,3 +39,9 @@ root to generate `gh-triage.conf.sh` from your project's actual fields, then
 review anything it couldn't match by name. `gh-triage.conf.sh.example`
 is also available to fill in by hand if you'd rather not query `gh` at setup
 time.
+
+## Views
+
+See the "Views" section of `skills/gh-triage/SKILL.md` for the
+recommended Active/Backlog/Epics project-board layout and step-by-step
+setup instructions.

@@ -82,6 +82,80 @@ sync with the Epic's `Slug:` line if the Epic's slug is ever changed by
 hand, and nothing validates that `<epic-slug>` corresponds to an existing
 Epic at write time.
 
+Status on an Epic means overall initiative progress, not a unit of work
+in flight - Backlog until child items start getting scoped, In Progress
+once children are actively being worked, Done once the epic's goal is
+met. There's no automatic rollup from child Status (GitHub Projects v2
+has no computed fields), so it's maintained by hand like any other
+item's Status, and can drift if nobody remembers to bump it.
+
+## Views
+
+`gh project` has no subcommand for creating or configuring saved Views
+(the Board/Table/Roadmap tabs, each with its own grouping, filter, and
+sort) - `view` only opens or prints the whole project, not a saved
+layout. Set up and maintain Views by hand in the web UI; every script in
+this skill touches fields and items on the underlying project, never
+view configuration, so nothing here can create one for you.
+
+Because Epic Status reads differently from every other item's (see
+above), keep Epics out of your default working view and give them their
+own view instead. Recommended layout - three views, reusing GitHub's
+three undeletable defaults (Board/Table/Roadmap) rather than hiding any
+of them:
+
+| Tab order | View | Repurposes | Layout | Filter | Group by | Sort |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | Active | default Board | Board | `-type:Epic -status:Backlog` | Status | Effort ascending |
+| 2 | Backlog | default Table | Table | `status:Backlog` | Type | Effort ascending |
+| 3 | Epics | default Roadmap | Table | `type:Epic` | Status | ticket number ascending |
+
+**Active** is the day-to-day kanban - Ready/Blocked/In Progress/Done
+only, Backlog excluded since deciding what's ready to pull next is the
+Backlog view's job. Its Effort-ascending sort is provisional - revisit
+once the views have been used for a while and a better sort becomes
+obvious in practice.
+
+**Backlog** is a grooming/estimating surface - only `Status: Backlog`
+items, grouped by Type so similar work batches together, sorted by
+Effort ascending to surface quick wins first.
+
+**Epics** is a Table (not a Board) so a handful of epics read as
+scannable rows - title, Status, Effort, slug all visible at once -
+grouped by Status using the initiative-progress semantics documented
+above, sorted by ticket number ascending (oldest epic first).
+
+### Setup steps
+
+For each view, open the project in the browser and click its tab:
+
+1. **Active** (the default Board tab):
+   - Click the tab name and rename it to `Active`.
+   - Open the filter bar and enter `-type:Epic -status:Backlog`.
+   - Open the view's `...` menu → Sort by → Effort → ascending. Leave
+     Group by on its default (Status).
+2. **Backlog** (the default Table tab):
+   - Rename the tab to `Backlog`.
+   - Filter bar: `status:Backlog`.
+   - View menu → Group by → Type. Sort by → Effort → ascending.
+3. **Epics** (the default Roadmap tab):
+   - Rename the tab to `Epics`.
+   - View menu → Layout → Table (switches it off the Roadmap
+     timeline layout). If that option is missing or greyed out, hide
+     this tab instead and create a new Table view named `Epics` from
+     the `+` button next to the tabs - same end state either way.
+   - Filter bar: `type:Epic`.
+   - View menu → Group by → Status. Sort by → whichever field holds
+     your `<PROJECT_KEY>-N` title prefix (e.g. Title) → ascending, so
+     the oldest epic sorts first.
+4. Drag the three tabs into the order Active, Backlog, Epics if they
+   aren't already in it.
+
+Exact menu wording may drift as GitHub updates the Projects UI - if a
+control isn't where these steps say, look for it under the view's `...`
+menu or the filter bar; the destination (the table above) doesn't change
+even if the click path does.
+
 ## Scripts
 
 Use `scripts/*.sh` instead of retyping raw `gh project` commands - same
