@@ -27,6 +27,7 @@ PROJECT_ID=PVT_test
 STATUS_FIELD=field_status
 TYPE_FIELD=field_type
 EFFORT_FIELD=field_effort
+EPIC_FIELD=field_epic
 declare -A STATUS=( [backlog]=opt_backlog [ready]=opt_ready [blocked]=opt_blocked [in_progress]=opt_inprogress [done]=opt_done )
 declare -A TYPE=( [story]=opt_story [bug]=opt_bug [task]=opt_task [spike]=opt_spike [epic]=opt_epic )
 declare -A EFFORT=( [xs]=opt_xs [s]=opt_s [m]=opt_m [l]=opt_l [xl]=opt_xl [xxl]=opt_xxl )
