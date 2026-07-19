@@ -34,8 +34,8 @@ This plugin ships no project-specific IDs - GitHub Projects (v2) doesn't
 expose field/option names to the API, only opaque IDs, so each consuming repo
 needs its own config file. See the "Setup" section of
 `skills/gh-triage/SKILL.md` for the full walkthrough: run
-`scripts/init-config.sh <project-num> <owner>` from your repo root to
-generate `gh-triage.conf.sh` from your project's actual fields, then
+`scripts/init-config.sh <project-num> <owner> <project-key>` from your repo
+root to generate `gh-triage.conf.sh` from your project's actual fields, then
 review anything it couldn't match by name. `gh-triage.conf.sh.example`
 is also available to fill in by hand if you'd rather not query `gh` at setup
 time.
