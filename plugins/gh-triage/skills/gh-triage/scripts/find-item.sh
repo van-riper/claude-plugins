@@ -5,4 +5,9 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
+if [ "$#" -ne 1 ]; then
+  echo "Usage: find-item.sh <title-keyword-regex>" >&2
+  exit 1
+fi
+
 list_items | jq --arg kw "$1" '.items[] | select(.title | test($kw; "i"))'

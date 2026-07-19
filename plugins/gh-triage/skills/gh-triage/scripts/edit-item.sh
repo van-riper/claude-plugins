@@ -6,6 +6,11 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
+if [ "$#" -lt 1 ]; then
+  echo "Usage: edit-item.sh <content-id> [title] [body]" >&2
+  exit 1
+fi
+
 content_id="$1"
 title="${2:--}"
 body="${3:--}"
