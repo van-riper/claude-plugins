@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Consumer-specific config for the gh-triage skill. Copy this file
+# to your repo root as gh-triage.conf.sh and fill in the values
+# below for your GitHub Project (v2). Nothing here is secret - these are
+# project/field/option IDs, not credentials - so it's safe to commit.
+#
+# Bootstrapping the values:
+#   1. Set PROJECT_NUM/OWNER/PROJECT_ID from your project's URL and
+#      `gh project view <num> --owner <owner> --format json`.
+#   2. Run scripts/refresh-ids.sh (needs PROJECT_NUM/OWNER set) to print
+#      every field and its option IDs, then fill in the *_FIELD variables
+#      and the option maps below from that output.
+#   3. Add/remove the single-value flag fields (BLOCKED/DECISION/ACTIVE
+#      below) to match whatever flag fields your project actually has.
+
+PROJECT_NUM=0
+OWNER=your-github-org-or-user
+PROJECT_ID=PVT_xxxxxxxxxxxxxxxxxxxx
+
+STATUS_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+PRIORITY_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+TARGET_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+BLOCKED_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+DECISION_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+ACTIVE_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+declare -A STATUS=( [open]=xxxxxxxx [done]=xxxxxxxx )
+declare -A PRIORITY=( [high]=xxxxxxxx [medium]=xxxxxxxx [low]=xxxxxxxx )
+declare -A TARGET=(
+  [now]=xxxxxxxx [next]=xxxxxxxx
+  [later]=xxxxxxxx [someday]=xxxxxxxx
+)
+declare -A BLOCKED=( [blocked]=xxxxxxxx )
+declare -A DECISION=( [decision]=xxxxxxxx )
+declare -A ACTIVE=( [active]=xxxxxxxx )

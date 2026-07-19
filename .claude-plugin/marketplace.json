@@ -8,6 +8,11 @@
       "name": "pythonicator",
       "source": "./plugins/pythonicator",
       "description": "Enforce the personal Python styleguide as the canonical source of truth for agentic Python work: a derived canon, quiet per-edit ruff fixes with a stop-time ruff and ty sweep, and a conformance reviewer agent."
+    },
+    {
+      "name": "gh-triage",
+      "source": "./plugins/gh-triage",
+      "description": "Triage and maintain a GitHub Project (v2) backlog board via gh project: field/option-id plumbing, item create/find/edit/archive scripts, and a Status/Priority/Target/Blocked/Decision/Active workflow."
     }
   ]
 }
