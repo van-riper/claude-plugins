@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# Usage: init-config.sh <project-num> <owner>
+# Usage: init-config.sh <project-num> <owner> <project-key>
 # Bootstraps gh-triage.conf.sh at the repo root from your GitHub
 # Project's actual fields, so you don't hand-transcribe refresh-ids.sh's
-# JSON into bash yourself. Best-effort: a field or option that isn't
-# named to match the Status/Priority/Target/Blocked/Decision/Active
-# model (case-insensitively) is left blank with a comment instead of
-# guessed - fill those in by hand, or delete the field entirely if your
-# project doesn't have it (see SKILL.md).
+# JSON into bash yourself. project-key is your chosen short ticket prefix
+# (e.g. ETYM), used verbatim - it isn't derived from anything in the
+# project. Best-effort on fields/options: anything that isn't named to
+# match the Status/Type/Effort model (case-insensitively) is left blank
+# with a comment instead of guessed - fill it in by hand, or delete the
+# field entirely if your project doesn't have it (see SKILL.md).
 set -euo pipefail
 
-if [ "$#" -ne 2 ]; then
-  echo "Usage: init-config.sh <project-num> <owner>" >&2
+if [ "$#" -ne 3 ]; then
+  echo "Usage: init-config.sh <project-num> <owner> <project-key>" >&2
   exit 1
 fi
 
 project_num="$1"
 owner="$2"
+project_key="$3"
 
 repo_root=$(git rev-parse --show-toplevel)
 conf="$repo_root/gh-triage.conf.sh"
@@ -73,40 +75,36 @@ emit_option() { # <key> <field-name> <option-name>
   echo "# should be deleted along with its usages if this project has no"
   echo "# such field (see SKILL.md)."
   echo
+  echo "PROJECT_KEY=$project_key"
   echo "PROJECT_NUM=$project_num"
   echo "OWNER=$owner"
   echo "PROJECT_ID=$project_id"
   echo
   emit_field STATUS_FIELD Status
-  emit_field PRIORITY_FIELD Priority
-  emit_field TARGET_FIELD Target
-  emit_field BLOCKED_FIELD Blocked
-  emit_field DECISION_FIELD Decision
-  emit_field ACTIVE_FIELD Active
+  emit_field TYPE_FIELD Type
+  emit_field EFFORT_FIELD Effort
   echo
   echo "declare -A STATUS=("
-  emit_option open Status Open
+  emit_option backlog Status Backlog
+  emit_option ready Status Ready
+  emit_option blocked Status Blocked
+  emit_option in_progress Status "In Progress"
   emit_option "done" Status Done
   echo ")"
-  echo "declare -A PRIORITY=("
-  emit_option high Priority High
-  emit_option medium Priority Medium
-  emit_option low Priority Low
+  echo "declare -A TYPE=("
+  emit_option story Type Story
+  emit_option bug Type Bug
+  emit_option task Type Task
+  emit_option spike Type Spike
+  emit_option epic Type Epic
   echo ")"
-  echo "declare -A TARGET=("
-  emit_option now Target Now
-  emit_option next Target Next
-  emit_option later Target Later
-  emit_option someday Target Someday
-  echo ")"
-  echo "declare -A BLOCKED=("
-  emit_option blocked Blocked Blocked
-  echo ")"
-  echo "declare -A DECISION=("
-  emit_option decision Decision Decision
-  echo ")"
-  echo "declare -A ACTIVE=("
-  emit_option active Active Active
+  echo "declare -A EFFORT=("
+  emit_option xs Effort XS
+  emit_option s Effort S
+  emit_option m Effort M
+  emit_option l Effort L
+  emit_option xl Effort XL
+  emit_option xxl Effort XXL
   echo ")"
 } > "$conf"
 
