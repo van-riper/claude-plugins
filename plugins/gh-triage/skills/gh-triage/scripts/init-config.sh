@@ -83,6 +83,7 @@ emit_option() { # <key> <field-name> <option-name>
   emit_field STATUS_FIELD Status
   emit_field TYPE_FIELD Type
   emit_field EFFORT_FIELD Effort
+  emit_field EPIC_FIELD Epic
   echo
   echo "declare -A STATUS=("
   emit_option backlog Status Backlog

@@ -20,6 +20,7 @@ PROJECT_ID=PVT_xxxxxxxxxxxxxxxxxxxx
 STATUS_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 TYPE_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 EFFORT_FIELD=PVTSSF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+EPIC_FIELD=PVTF_xxxxxxxxxxxxxxxxxxxxxxxxxxxx  # optional - Epic reference field
 
 declare -A STATUS=(
   [backlog]=xxxxxxxx [ready]=xxxxxxxx [blocked]=xxxxxxxx
