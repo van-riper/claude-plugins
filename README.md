@@ -14,8 +14,9 @@ A personal Claude Code plugin marketplace.
   work: a derived canon, a Ruff and ty PostToolUse hook, and a conformance
   reviewer agent. See the [README](plugins/pythonicator/README.md).
 - **gh-triage**: wraps `gh project` (GitHub Projects v2) with a
-  Status/Type/Effort triage workflow - scripts for creating, finding,
-  editing, and archiving backlog items without retyping field/option IDs.
+  Status/Type/Effort/Epic triage workflow and a recommended Active/
+  Backlog/Epics view layout - scripts for creating, finding, editing,
+  and archiving backlog items without retyping field/option IDs.
   See the [README](plugins/gh-triage/README.md).
 
 ## Updating

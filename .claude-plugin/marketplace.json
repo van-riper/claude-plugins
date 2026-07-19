@@ -12,7 +12,7 @@
     {
       "name": "gh-triage",
       "source": "./plugins/gh-triage",
-      "description": "Triage and maintain a GitHub Project (v2) backlog board via gh project: field/option-id plumbing, item create/find/edit/archive scripts, and a Status/Type/Effort workflow."
+      "description": "Triage and maintain a GitHub Project (v2) backlog board via gh project: field/option-id plumbing, item create/find/edit/archive scripts, Epic tracking, and a Status/Type/Effort workflow with a recommended Active/Backlog/Epics view layout."
     }
   ]
 }

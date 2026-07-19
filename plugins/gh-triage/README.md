@@ -1,8 +1,9 @@
 # gh-triage
 
 A Claude Code plugin that wraps `gh project` (GitHub Projects v2) with a
-Status/Type/Effort triage workflow: scripts for creating, finding, editing, and
-archiving backlog items without retyping the underlying GraphQL field/option IDs on
+Status/Type/Effort/Epic triage workflow and a recommended Active/Backlog/
+Epics view layout: scripts for creating, finding, editing, and archiving
+backlog items without retyping the underlying GraphQL field/option IDs on
 every call.
 
 It bundles one skill:
