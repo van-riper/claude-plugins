@@ -1,6 +1,6 @@
 ---
 name: gh-triage
-description: Use when adding, updating, or triaging backlog/roadmap items on a GitHub Project (v2) board via `gh project`. Covers the gh project commands, field/option IDs, and a Status/Type/Effort workflow.
+description: Use when adding, updating, or triaging backlog/roadmap items on a GitHub Project (v2) via `gh project`, including creating or linking Epics, and setting up or troubleshooting the project's saved Board/Table views.
 ---
 
 ## Setup (once per repo)
@@ -330,7 +330,7 @@ themselves rather than retrying or bypassing the gate.
 explicit go-ahead every time - never retry it automatically or ask for a
 standing grant.
 
-## Don't
+## Guardrails
 
 - Don't call `gh project` directly for anything `scripts/*.sh` already
   does - always go through the script. For anything the scripts don't
