@@ -117,8 +117,8 @@ layout - three views, reusing GitHub's three undeletable defaults
 | Tab order | View | Repurposes | Layout | Filter | Group by | Sort |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Active | default Board | Board | `-type:Epic -status:Backlog` | Status | Effort ascending |
-| 2 | Backlog | default Table | Table | `status:Backlog -type:Epic` | Type | Effort ascending |
-| 3 | Epics | default Roadmap | Table | `-status:Done -no:epic` | Epic | Type ascending |
+| 2 | Backlog | default Table | Table | `-type:Epic status:Backlog` | Type | Effort ascending |
+| 3 | Epics | default Roadmap | Table | `-no:epic -status:Done` | Epic | Type ascending |
 
 **Active** is the day-to-day kanban - Ready/Blocked/In Progress/Done
 only, Backlog excluded since deciding what's ready to pull next is the
@@ -165,7 +165,7 @@ For each view, open the project in the browser and click its tab:
    - View menu → Fields → enable `Epic` so it shows on each card.
 2. **Backlog** (the default Table tab):
    - Rename the tab to `Backlog`.
-   - Filter bar: `status:Backlog -type:Epic`.
+   - Filter bar: `-type:Epic status:Backlog`.
    - View menu → Group by → Type. Sort by → Effort → ascending.
    - View menu → Fields → enable `Epic` so it shows as a column.
 3. **Epics** (the default Roadmap tab):
@@ -174,7 +174,7 @@ For each view, open the project in the browser and click its tab:
      timeline layout). If that option is missing or greyed out, hide
      this tab instead and create a new Table view named `Epics` from
      the `+` button next to the tabs - same end state either way.
-   - Filter bar: `-status:Done -no:epic`.
+   - Filter bar: `-no:epic -status:Done`.
    - View menu → Group by → Epic. Sort by → Type → ascending.
 4. Drag the three tabs into the order Active, Backlog, Epics if they
    aren't already in it.
