@@ -8,15 +8,8 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-next_number() {
-  local highest
-  highest=$(list_items | jq -r '.items[].title' \
-    | { grep -oE "^${PROJECT_KEY}-[0-9]+" || true; } \
-    | { grep -oE '[0-9]+$' || true; } \
-    | sort -n | tail -1)
-  echo "$((${highest:-0} + 1))"
-}
-
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  next_number
-fi
+highest=$(list_items | jq -r '.items[].title' \
+  | { grep -oE "^${PROJECT_KEY}-[0-9]+" || true; } \
+  | { grep -oE '[0-9]+$' || true; } \
+  | sort -n | tail -1)
+echo "$((${highest:-0} + 1))"
