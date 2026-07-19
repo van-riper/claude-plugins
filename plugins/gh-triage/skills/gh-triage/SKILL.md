@@ -30,7 +30,7 @@ repo root as `gh-triage.conf.sh` and fill it in by hand using
 `scripts/refresh-ids.sh`'s output instead.
 
 `scripts/lib.sh` loads this file for every script below, exposing its
-values as `open`/`high`/`now`/`blocked`-style keys. If any script call
+values as `backlog`/`story`/`m`-style keys. If any script call
 returns a "not found" GraphQL error, an ID has drifted (e.g. a field was
 deleted and recreated) - rerun `refresh-ids.sh` and update the config
 file before guessing.
@@ -75,20 +75,19 @@ time:
 
 | Script                    | Purpose                                         |
 | ------------------------- | ------------------------------------------------ |
-| `scripts/init-config.sh`  | `<project-num> <owner>` - bootstraps `gh-triage.conf.sh` at the repo root for a repo that doesn't have one yet (see Setup above). |
+| `scripts/init-config.sh`  | `<project-num> <owner> <project-key>` - bootstraps `gh-triage.conf.sh` at the repo root for a repo that doesn't have one yet (see Setup above). |
 | `scripts/create-item.sh`  | `[--number] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below). |
 | `scripts/next-number.sh`  | Prints the next sequential ticket number on its own, without creating an item. Used internally by `create-item.sh --number`. |
 | `scripts/set-fields.sh`   | `<item-id> [status] [type] [effort]` - updates fields on an existing item; pass `-` to leave a field unchanged. |
 | `scripts/find-item.sh`    | `<title-keyword-regex>` - prints matching items as JSON, including `.id` and `.content.id`. |
 | `scripts/edit-item.sh`    | `<content-id> [title] [body]` - rewrites an item's title/body; pass `-` to leave a field unchanged. Uses the `.content.id` (`DI_...`), not the item id. |
 | `scripts/archive-item.sh` | `<item-id>` - archives a placeholder item.       |
-| `scripts/board-summary.sh`| Prints Status counts, then every item flagged Active, Blocked, or Decision - a one-call orientation dump for the start of a session. |
+| `scripts/board-summary.sh`| Prints Status counts - a one-call orientation dump for the start of a session. |
 | `scripts/refresh-ids.sh`  | Prints current field/option IDs, for setup or when they've drifted. |
 | `scripts/set-readme.sh`   | `<readme-file>` - sets the project README from a file's contents. |
 
-Status/priority/target/blocked/decision/active arguments are the map
-keys from your config file (e.g. `done`, `high`, `now`, `on`), not raw
-option IDs.
+Status/type/effort arguments are the map keys from your config file
+(e.g. `done`, `spike`, `m`), not raw option IDs.
 
 ## Add a new item
 
@@ -145,9 +144,9 @@ When a bundled placeholder item (e.g. "16: Word pages, backtraces, and
 SEO breakdowns (rest of Phase 3)") starts active work, replace it with
 individually-tracked items rather than editing it in place:
 
-1. Create the finer items (see "Add a new item" above), Target set to
-   how urgently each should be picked up, Status Open (Done if a piece
-   already shipped).
+1. Create the finer items (see "Add a new item" above), Status set to
+   Backlog or Ready depending on how urgently each should be picked up
+   (Done if a piece already shipped).
 2. Retire the placeholder - archive rather than delete, so the split is
    recoverable if it turns out wrong:
    ```sh
