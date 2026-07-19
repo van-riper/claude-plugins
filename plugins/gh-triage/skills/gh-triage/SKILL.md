@@ -159,9 +159,10 @@ even if the click path does.
 
 ## Scripts
 
-Use `scripts/*.sh` instead of retyping raw `gh project` commands - same
-calls, one invocation instead of a multi-line block generated fresh each
-time:
+Every board operation **must** go through `scripts/*.sh` - never type a
+raw `gh project` command for something a script already covers. They
+wrap the same calls, one invocation instead of a multi-line block
+generated fresh each time:
 
 | Script                    | Purpose                                         |
 | ------------------------- | ------------------------------------------------ |
@@ -267,6 +268,13 @@ individually-tracked items rather than editing it in place:
 
 ## Permission gates
 
+If a task needs a `gh project` operation no script here covers, that is
+not license to type the raw command yourself - stop and ask the user
+for explicit permission first, the same as for any other blocked
+command. Scripting the operation and adding it to `scripts/*.sh` is the
+better long-term fix; running raw `gh` in the meantime always needs the
+user's go-ahead.
+
 Some permission-gate tools block every non-read-only `gh` subcommand by
 default, `gh project item-create`/`item-edit`/`item-archive`/etc.
 included, even though these are safe, non-destructive project-board
@@ -281,6 +289,9 @@ standing grant.
 
 ## Don't
 
+- Don't call `gh project` directly for anything `scripts/*.sh` already
+  does - always go through the script. For anything the scripts don't
+  cover, get the user's permission before running a raw `gh` command.
 - Don't duplicate the board's backlog/roadmap detail into a separate doc
   in the repo - the project should stay the single source of truth once
   you've adopted this workflow.
