@@ -1,6 +1,6 @@
 ---
 name: gh-triage
-description: Use when adding, updating, or triaging backlog/roadmap items on a GitHub Project (v2) board via `gh project`. Covers the gh project commands, field/option IDs, and a Status/Priority/Target/Blocked/Decision/Active workflow.
+description: Use when adding, updating, or triaging backlog/roadmap items on a GitHub Project (v2) board via `gh project`. Covers the gh project commands, field/option IDs, and a Status/Type/Effort workflow.
 ---
 
 ## Setup (once per repo)
@@ -13,11 +13,11 @@ script below needs them resolved up front.
 1. Get your project's number and owner from its URL
    (`github.com/<owner>/projects/<num>` or
    `github.com/orgs/<owner>/projects/<num>`).
-2. Run `scripts/init-config.sh <project-num> <owner>` from your repo
-   root. It resolves the project ID and every field/option ID via `gh`
-   and writes `gh-triage.conf.sh`, matching field/option names
-   to the Status/Priority/Target/Blocked/Decision/Active model
-   case-insensitively.
+2. Pick a short project key (your ticket prefix, e.g. `ETYM`), then run
+   `scripts/init-config.sh <project-num> <owner> <project-key>` from your
+   repo root. It resolves the project ID and every field/option ID via
+   `gh` and writes `gh-triage.conf.sh`, matching field/option
+   names to the Status/Type/Effort model case-insensitively.
 3. Review the generated file. Anything the script couldn't match by
    name is left as `# not found` - either fill it in by hand from
    `scripts/refresh-ids.sh`'s output, or delete it (and the matching
@@ -38,13 +38,34 @@ file before guessing.
 ## Fields
 
 ```
-Status   - Open/Done (or your project's equivalents)
-Priority - High/Medium/Low
-Target   - Now/Next/Later/Someday
-Blocked  - single-value flag: set or unset, not multi-option
-Decision - single-value flag: set or unset, not multi-option
-Active   - single-value flag: set or unset, not multi-option
+Status - Backlog/Ready/Blocked/In Progress/Done
+Type   - Story/Bug/Task/Spike/Epic
+Effort - XS/S/M/L/XL/XXL
 ```
+
+Status is the single source of truth for where an item stands - Blocked
+is its own stage (items get blocked before starting more often than
+mid-flow), not a flag layered on top. Type doubles as the "needs a design
+decision before it can start" signal: file that kind of item as a Spike
+instead of flagging an existing item. Epic is a regular item like any
+other Type - see "Epics" below, not a separate format.
+
+Every item's title carries a project-wide ID prefix:
+`<PROJECT_KEY>-<N>: <title>` (e.g. `ETYM-7: Add dark mode`), one flat
+counter shared by every Type - Epics aren't numbered separately.
+
+### Epics
+
+An Epic is a `Type: Epic` item, not a separate README-based format -
+this reuses `find-item.sh`/`set-fields.sh`/the ID counter instead of a
+bespoke parser. Epics share the same flat ID counter as every other
+item - there's no separate epic numbering, since baking a parent epic
+into a child's ID would go stale the moment that child gets reassigned
+to a different epic (the same reason Jira, which uses one flat counter
+per project regardless of hierarchy, doesn't support nested IDs either).
+
+Linking a child item to its parent epic (a Text field holding the
+epic's ID) isn't implemented yet - not part of this field model.
 
 ## Scripts
 
@@ -55,9 +76,9 @@ time:
 | Script                    | Purpose                                         |
 | ------------------------- | ------------------------------------------------ |
 | `scripts/init-config.sh`  | `<project-num> <owner>` - bootstraps `gh-triage.conf.sh` at the repo root for a repo that doesn't have one yet (see Setup above). |
-| `scripts/create-item.sh`  | `[--number] <title> <body> [priority] [target]` - creates an item as Status: Open and tags priority/target in one call. Field args default to `low`/`later`. `--number` prepends the next sequential ticket number to the title (see below). |
+| `scripts/create-item.sh`  | `[--number] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below). |
 | `scripts/next-number.sh`  | Prints the next sequential ticket number on its own, without creating an item. Used internally by `create-item.sh --number`. |
-| `scripts/set-fields.sh`   | `<item-id> [status] [priority] [target] [blocked] [decision] [active]` - updates fields on an existing item; pass `-` to leave a field unchanged. `blocked`/`decision`/`active` take `on`/`off`/`-`. |
+| `scripts/set-fields.sh`   | `<item-id> [status] [type] [effort]` - updates fields on an existing item; pass `-` to leave a field unchanged. |
 | `scripts/find-item.sh`    | `<title-keyword-regex>` - prints matching items as JSON, including `.id` and `.content.id`. |
 | `scripts/edit-item.sh`    | `<content-id> [title] [body]` - rewrites an item's title/body; pass `-` to leave a field unchanged. Uses the `.content.id` (`DI_...`), not the item id. |
 | `scripts/archive-item.sh` | `<item-id>` - archives a placeholder item.       |
@@ -86,12 +107,12 @@ scripts/create-item.sh --number "..." "body text"
 If your project doesn't use that convention, drop `--number` and pass
 whatever title you want.
 
-`create-item.sh` always sets Status: Open. Priority/target default to
-`low`/`later` if omitted; pass them explicitly for items you're starting
-in this same session, e.g.:
+`create-item.sh` always sets Status: Backlog. Type and Effort are
+required every time - there's no default, since guessing either wrong is
+worse than asking:
 
 ```sh
-scripts/create-item.sh --number "..." "body text" medium now
+scripts/create-item.sh --number "..." "body text" task m
 ```
 
 ## Update an existing item
@@ -105,11 +126,11 @@ scripts/find-item.sh "keyword"
 Then update fields with its `.id` (the `PVTI_...` item id):
 
 ```sh
-scripts/set-fields.sh <item-id> - - now - - on
+scripts/set-fields.sh <item-id> in_progress - -
 ```
 
-Set Target to `now` and the Active flag on when you start non-trivial
-work on an item, Status to `done` once it ships.
+Set Status to `in_progress` when you start non-trivial work on an item,
+`done` once it ships.
 
 To edit an item's **title or body**, use `scripts/edit-item.sh
 <content-id> [title] [body]`, with the **content ID** (`DI_...`, from
