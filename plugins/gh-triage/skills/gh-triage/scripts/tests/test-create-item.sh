@@ -28,4 +28,10 @@ repo=$(setup_stub_project '{"items":[{"title":"ETYM-4: existing"}]}')
 grep -q -- "--title ETYM-5: New" "$repo/gh-calls.log" \
   || fail "expected title prefixed ETYM-5:"
 
+# Case 4: --epic tags the new item's Epic field
+repo=$(setup_stub_project '{"items":[]}')
+(cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/create-item.sh --epic ETYM-2 "New" "body" bug s >/dev/null)
+grep -q -- "--field-id field_epic --text ETYM-2" "$repo/gh-calls.log" \
+  || fail "expected Epic field set to ETYM-2"
+
 echo "PASS: test-create-item.sh"

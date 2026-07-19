@@ -1,21 +1,35 @@
 #!/usr/bin/env bash
-# Usage: create-item.sh [--number] <title> <body> <type> <effort>
+# Usage: create-item.sh [--number] [--epic <epic-id>] <title> <body> <type> <effort>
 # Always creates the item as Status: Backlog. type/effort are required -
 # see SKILL.md's Fields section for valid values. With --number, prepends
 # the next sequential ticket number (see next-number.sh) to the title as
-# "<PROJECT_KEY>-N: <title>".
+# "<PROJECT_KEY>-N: <title>". With --epic <epic-id>, also tags the new
+# item's Epic reference field to <epic-id> (see set-epic.sh). Flags may
+# appear in either order before the positional args.
 set -euo pipefail
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
 source "$script_dir/lib.sh"
 
 number=false
-if [ "${1:-}" = "--number" ]; then
-  number=true
-  shift
-fi
+epic=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --number)
+      number=true
+      shift
+      ;;
+    --epic)
+      epic="$2"
+      shift 2
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
 
 if [ "$#" -lt 4 ]; then
-  echo "Usage: create-item.sh [--number] <title> <body> <type> <effort>" >&2
+  echo "Usage: create-item.sh [--number] [--epic <epic-id>] <title> <body> <type> <effort>" >&2
   exit 1
 fi
 
@@ -37,5 +51,9 @@ gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
   --field-id "$TYPE_FIELD" --single-select-option-id "${TYPE[$type]}"
 gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
   --field-id "$EFFORT_FIELD" --single-select-option-id "${EFFORT[$effort]}"
+
+if [ -n "$epic" ]; then
+  "$script_dir/set-epic.sh" "$id" "$epic"
+fi
 
 echo "$id"
