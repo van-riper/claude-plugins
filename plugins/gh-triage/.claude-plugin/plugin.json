@@ -1,7 +1,7 @@
 {
   "name": "gh-triage",
   "description": "Triage and maintain a GitHub Project (v2) backlog board via gh project: field/option-id plumbing, item create/find/edit/archive scripts, and a Status/Type/Effort workflow.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "author": {
     "name": "van-riper"
