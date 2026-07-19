@@ -36,11 +36,16 @@ EOF
   cat > "$repo/bin/gh" <<EOF
 #!/usr/bin/env bash
 echo "\$*" >> "$repo/gh-calls.log"
-if [[ "\$*" == *"item-list"*"--limit 1"* ]]; then
-  count=\$(echo '$items_json' | jq '.items | length')
-  echo '{"totalCount": '"\$count"'}'
-elif [[ "\$*" == *"item-list"* ]]; then
-  echo '$items_json'
+if [[ "\$*" == *"item-list"* ]]; then
+  count_file="$repo/.item-list-calls"
+  n=\$(( \$(cat "\$count_file" 2>/dev/null || echo 0) + 1 ))
+  echo "\$n" > "\$count_file"
+  if [ "\$n" -eq 1 ]; then
+    count=\$(echo '$items_json' | jq '.items | length')
+    echo '{"totalCount": '"\$count"'}'
+  else
+    echo '$items_json'
+  fi
 else
   echo '{"id":"PVTI_stub"}'
 fi

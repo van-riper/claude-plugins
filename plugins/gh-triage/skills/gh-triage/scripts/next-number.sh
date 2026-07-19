@@ -11,8 +11,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 next_number() {
   local highest
   highest=$(list_items | jq -r '.items[].title' \
-    | grep -oE "^${PROJECT_KEY}-[0-9]+" | grep -oE '[0-9]+$' \
-    | sort -n | tail -1 || echo "")
+    | { grep -oE "^${PROJECT_KEY}-[0-9]+" || true; } \
+    | { grep -oE '[0-9]+$' || true; } \
+    | sort -n | tail -1)
   echo "$((${highest:-0} + 1))"
 }
 
