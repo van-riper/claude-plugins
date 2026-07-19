@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Usage: create-item.sh [--number] [--epic <epic-id>] <title> <body> <type> <effort>
+# Usage: create-item.sh [--number] [--epic <epic-slug>] <title> <body> <type> <effort>
 # Always creates the item as Status: Backlog. type/effort are required -
 # see SKILL.md's Fields section for valid values. With --number, prepends
 # the next sequential ticket number (see next-number.sh) to the title as
-# "<PROJECT_KEY>-N: <title>". With --epic <epic-id>, also tags the new
-# item's Epic reference field to <epic-id> (see set-epic.sh). Flags may
+# "<PROJECT_KEY>-N: <title>". With --epic <epic-slug>, also tags the new
+# item's Epic reference field to <epic-slug> (see set-epic.sh). Flags may
 # appear in either order before the positional args.
 set -euo pipefail
 script_dir="$(dirname "${BASH_SOURCE[0]}")"
@@ -29,7 +29,7 @@ while [ "$#" -gt 0 ]; do
 done
 
 if [ "$#" -lt 4 ]; then
-  echo "Usage: create-item.sh [--number] [--epic <epic-id>] <title> <body> <type> <effort>" >&2
+  echo "Usage: create-item.sh [--number] [--epic <epic-slug>] <title> <body> <type> <effort>" >&2
   exit 1
 fi
 

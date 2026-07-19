@@ -64,11 +64,23 @@ into a child's ID would go stale the moment that child gets reassigned
 to a different epic (the same reason Jira, which uses one flat counter
 per project regardless of hierarchy, doesn't support nested IDs either).
 
-A child item's `Epic` field (a Text field) holds its parent epic's plain
-item ID (e.g. `ETYM-2`) - set it with `set-epic.sh <item-id> <epic-id>`,
-or tag it at creation time with `create-item.sh --epic <epic-id> ...`.
-Nothing validates that `<epic-id>` is an existing Epic item at write
-time.
+Every Epic item carries its own canonical **slug** as the first line of
+its body: `Slug: <slug>` (e.g. `Slug: onboarding-rework`), followed by
+whatever other description the Epic has. Write this by hand when
+creating an Epic - there's no auto-generation from the title, since
+Epics are created rarely enough that it isn't worth automating, and a
+human or agent picking the slug can make it shorter or clearer than a
+mechanical slugify of the full title would.
+
+A child item's `Epic` field (a Text field) holds a snapshot of its parent
+Epic's slug (e.g. `onboarding-rework`), not the Epic's item ID - a slug
+reads directly on the board, unlike an ID, since GitHub Projects has no
+way to resolve an ID into something readable there. Set it with
+`set-epic.sh <item-id> <epic-slug>`, or tag it at creation time with
+`create-item.sh --epic <epic-slug> ...`. Nothing keeps this snapshot in
+sync with the Epic's `Slug:` line if the Epic's slug is ever changed by
+hand, and nothing validates that `<epic-slug>` corresponds to an existing
+Epic at write time.
 
 ## Scripts
 
@@ -79,10 +91,10 @@ time:
 | Script                    | Purpose                                         |
 | ------------------------- | ------------------------------------------------ |
 | `scripts/init-config.sh`  | `<project-num> <owner> <project-key>` - bootstraps `gh-triage.conf.sh` at the repo root for a repo that doesn't have one yet (see Setup above). |
-| `scripts/create-item.sh`  | `[--number] [--epic <epic-id>] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below); `--epic` tags the new item's Epic reference field. |
+| `scripts/create-item.sh`  | `[--number] [--epic <epic-slug>] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below); `--epic` tags the new item's Epic reference field with the parent Epic's slug. |
 | `scripts/next-number.sh`  | Prints the next sequential ticket number on its own, without creating an item. Used internally by `create-item.sh --number`. |
 | `scripts/set-fields.sh`   | `<item-id> [status] [type] [effort]` - updates fields on an existing item; pass `-` to leave a field unchanged. |
-| `scripts/set-epic.sh`     | `<item-id> <epic-id>` - sets an existing item's Epic reference field to the parent epic's plain ID. |
+| `scripts/set-epic.sh`     | `<item-id> <epic-slug>` - sets an existing item's Epic reference field to the parent epic's slug. |
 | `scripts/find-item.sh`    | `<title-keyword-regex>` - prints matching items as JSON, including `.id` and `.content.id`. |
 | `scripts/edit-item.sh`    | `<content-id> [title] [body]` - rewrites an item's title/body; pass `-` to leave a field unchanged. Uses the `.content.id` (`DI_...`), not the item id. |
 | `scripts/archive-item.sh` | `<item-id>` - archives a placeholder item.       |
@@ -113,12 +125,20 @@ worse than asking:
 scripts/create-item.sh --number "..." "body text" task m
 ```
 
-If the new item belongs to an Epic, add `--epic <epic-id>` with the
-parent Epic's plain ID (e.g. `ETYM-2`) to tag it at creation time,
-instead of a separate `set-epic.sh` call afterward:
+If the new item belongs to an Epic, add `--epic <epic-slug>` with the
+parent Epic's slug (from the `Slug:` line in the Epic's body, e.g.
+`onboarding-rework`) to tag it at creation time, instead of a separate
+`set-epic.sh` call afterward:
 
 ```sh
-scripts/create-item.sh --number --epic ETYM-2 "..." "body text" task m
+scripts/create-item.sh --number --epic onboarding-rework "..." "body text" task m
+```
+
+Creating an Epic itself is the same call with `type` set to `epic` - give
+it a slug as the first line of its body:
+
+```sh
+scripts/create-item.sh --number "Onboarding rework" "Slug: onboarding-rework" epic l
 ```
 
 ## Update an existing item
@@ -139,7 +159,8 @@ Set Status to `in_progress` when you start non-trivial work on an item,
 `done` once it ships.
 
 To link an existing item to an Epic (or change its Epic), use
-`scripts/set-epic.sh <item-id> <epic-id>`.
+`scripts/set-epic.sh <item-id> <epic-slug>` with the parent Epic's slug
+(from the `Slug:` line in its body).
 
 To edit an item's **title or body**, use `scripts/edit-item.sh
 <content-id> [title] [body]`, with the **content ID** (`DI_...`, from
