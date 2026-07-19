@@ -1,50 +1,27 @@
 #!/usr/bin/env bash
-# Usage: set-fields.sh <item-id> [status] [priority] [target] [blocked] [decision] [active]
-# status: open|done|-   priority: high|medium|low|-   target: now|next|later|someday|-
-# blocked/decision/active: on|off|-  ("on" sets the flag, "off" clears
-# it, "-" leaves it unchanged). Pass "-" for any positional arg to skip
-# it; trailing args may be omitted entirely.
+# Usage: set-fields.sh <item-id> [status] [type] [effort]
+# status: backlog|ready|blocked|in_progress|done|-
+# type: story|bug|task|spike|epic|-
+# effort: xs|s|m|l|xl|xxl|-
+# Pass "-" for any positional arg to skip it; trailing args may be
+# omitted entirely.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 id="$1"
 status="${2:--}"
-priority="${3:--}"
-target="${4:--}"
-blocked="${5:--}"
-decision="${6:--}"
-active="${7:--}"
+type="${3:--}"
+effort="${4:--}"
 
 if [ "$status" != "-" ]; then
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
     --field-id "$STATUS_FIELD" --single-select-option-id "${STATUS[$status]}"
 fi
-if [ "$priority" != "-" ]; then
+if [ "$type" != "-" ]; then
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$PRIORITY_FIELD" --single-select-option-id "${PRIORITY[$priority]}"
+    --field-id "$TYPE_FIELD" --single-select-option-id "${TYPE[$type]}"
 fi
-if [ "$target" != "-" ]; then
+if [ "$effort" != "-" ]; then
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$TARGET_FIELD" --single-select-option-id "${TARGET[$target]}"
-fi
-if [ "$blocked" = "on" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$BLOCKED_FIELD" --single-select-option-id "${BLOCKED[blocked]}"
-elif [ "$blocked" = "off" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$BLOCKED_FIELD" --clear
-fi
-if [ "$decision" = "on" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$DECISION_FIELD" --single-select-option-id "${DECISION[decision]}"
-elif [ "$decision" = "off" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$DECISION_FIELD" --clear
-fi
-if [ "$active" = "on" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$ACTIVE_FIELD" --single-select-option-id "${ACTIVE[active]}"
-elif [ "$active" = "off" ]; then
-  gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$ACTIVE_FIELD" --clear
+    --field-id "$EFFORT_FIELD" --single-select-option-id "${EFFORT[$effort]}"
 fi
