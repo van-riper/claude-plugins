@@ -64,8 +64,11 @@ into a child's ID would go stale the moment that child gets reassigned
 to a different epic (the same reason Jira, which uses one flat counter
 per project regardless of hierarchy, doesn't support nested IDs either).
 
-Linking a child item to its parent epic (a Text field holding the
-epic's ID) isn't implemented yet - not part of this field model.
+A child item's `Epic` field (a Text field) holds its parent epic's plain
+item ID (e.g. `ETYM-2`) - set it with `set-epic.sh <item-id> <epic-id>`,
+or tag it at creation time with `create-item.sh --epic <epic-id> ...`.
+Nothing validates that `<epic-id>` is an existing Epic item at write
+time.
 
 ## Scripts
 
@@ -76,9 +79,10 @@ time:
 | Script                    | Purpose                                         |
 | ------------------------- | ------------------------------------------------ |
 | `scripts/init-config.sh`  | `<project-num> <owner> <project-key>` - bootstraps `gh-triage.conf.sh` at the repo root for a repo that doesn't have one yet (see Setup above). |
-| `scripts/create-item.sh`  | `[--number] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below). |
+| `scripts/create-item.sh`  | `[--number] [--epic <epic-id>] <title> <body> <type> <effort>` - creates an item as Status: Backlog and tags type/effort in one call - both required, no default. `--number` prepends the next sequential `<PROJECT_KEY>-N` to the title (see below); `--epic` tags the new item's Epic reference field. |
 | `scripts/next-number.sh`  | Prints the next sequential ticket number on its own, without creating an item. Used internally by `create-item.sh --number`. |
 | `scripts/set-fields.sh`   | `<item-id> [status] [type] [effort]` - updates fields on an existing item; pass `-` to leave a field unchanged. |
+| `scripts/set-epic.sh`     | `<item-id> <epic-id>` - sets an existing item's Epic reference field to the parent epic's plain ID. |
 | `scripts/find-item.sh`    | `<title-keyword-regex>` - prints matching items as JSON, including `.id` and `.content.id`. |
 | `scripts/edit-item.sh`    | `<content-id> [title] [body]` - rewrites an item's title/body; pass `-` to leave a field unchanged. Uses the `.content.id` (`DI_...`), not the item id. |
 | `scripts/archive-item.sh` | `<item-id>` - archives a placeholder item.       |
@@ -109,6 +113,14 @@ worse than asking:
 scripts/create-item.sh --number "..." "body text" task m
 ```
 
+If the new item belongs to an Epic, add `--epic <epic-id>` with the
+parent Epic's plain ID (e.g. `ETYM-2`) to tag it at creation time,
+instead of a separate `set-epic.sh` call afterward:
+
+```sh
+scripts/create-item.sh --number --epic ETYM-2 "..." "body text" task m
+```
+
 ## Update an existing item
 
 Find its item first (title match):
@@ -125,6 +137,9 @@ scripts/set-fields.sh <item-id> in_progress - -
 
 Set Status to `in_progress` when you start non-trivial work on an item,
 `done` once it ships.
+
+To link an existing item to an Epic (or change its Epic), use
+`scripts/set-epic.sh <item-id> <epic-id>`.
 
 To edit an item's **title or body**, use `scripts/edit-item.sh
 <content-id> [title] [body]`, with the **content ID** (`DI_...`, from
