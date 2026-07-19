@@ -135,7 +135,7 @@ code alone.
 
 ## Split a placeholder item into finer items
 
-When a bundled placeholder item (e.g. "16: Word pages, backtraces, and
+When a bundled placeholder item (e.g. "ETYM-16: Word pages, backtraces, and
 SEO breakdowns (rest of Phase 3)") starts active work, replace it with
 individually-tracked items rather than editing it in place:
 
