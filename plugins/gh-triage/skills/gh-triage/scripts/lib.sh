@@ -32,3 +32,18 @@ list_items() {
   gh project item-list "$PROJECT_NUM" --owner "$OWNER" \
     --format json --limit "$total"
 }
+
+# resolve <map-name> <key> <field-label>
+# Looks up <key> in the named STATUS/TYPE/EFFORT associative array and
+# prints its option id, or fails loudly with the valid keys instead of
+# forwarding an empty --single-select-option-id to `gh` on a typo or an
+# unresolved ("not found") config entry.
+resolve() {
+  local -n map="$1"
+  local key="$2" label="$3"
+  if [ -z "${map[$key]:-}" ]; then
+    echo "error: invalid $label '$key' - expected one of: ${!map[*]}" >&2
+    exit 1
+  fi
+  echo "${map[$key]}"
+}

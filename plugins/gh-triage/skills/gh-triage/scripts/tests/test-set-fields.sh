@@ -20,4 +20,11 @@ repo=$(setup_stub_project '{"items":[]}')
 grep -q -- "--field-id field_status --single-select-option-id opt_blocked" "$repo/gh-calls.log" \
   || fail "expected Status set to blocked"
 
+# Case 3: a mistyped status key fails loudly instead of forwarding an
+# empty --single-select-option-id to gh
+repo=$(setup_stub_project '{"items":[]}')
+if (cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/set-fields.sh PVTI_x statuz - - 2>/dev/null); then
+  fail "expected an error on an invalid status key"
+fi
+
 echo "PASS: test-set-fields.sh"

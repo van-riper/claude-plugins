@@ -38,6 +38,10 @@ body="$2"
 type="$3"
 effort="$4"
 
+status_option=$(resolve STATUS backlog Status)
+type_option=$(resolve TYPE "$type" Type)
+effort_option=$(resolve EFFORT "$effort" Effort)
+
 if [ "$number" = true ]; then
   title="${PROJECT_KEY}-$("$script_dir/next-number.sh"): $title"
 fi
@@ -46,11 +50,11 @@ id=$(gh project item-create "$PROJECT_NUM" --owner "$OWNER" \
   --title "$title" --body "$body" --format json | jq -r '.id')
 
 gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-  --field-id "$STATUS_FIELD" --single-select-option-id "${STATUS[backlog]}"
+  --field-id "$STATUS_FIELD" --single-select-option-id "$status_option"
 gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-  --field-id "$TYPE_FIELD" --single-select-option-id "${TYPE[$type]}"
+  --field-id "$TYPE_FIELD" --single-select-option-id "$type_option"
 gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-  --field-id "$EFFORT_FIELD" --single-select-option-id "${EFFORT[$effort]}"
+  --field-id "$EFFORT_FIELD" --single-select-option-id "$effort_option"
 
 if [ -n "$epic" ]; then
   "$script_dir/set-epic.sh" "$id" "$epic"

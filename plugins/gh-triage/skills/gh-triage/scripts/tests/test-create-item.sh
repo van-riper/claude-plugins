@@ -34,4 +34,11 @@ repo=$(setup_stub_project '{"items":[]}')
 grep -q -- "--field-id field_epic --text onboarding-rework" "$repo/gh-calls.log" \
   || fail "expected Epic field set to onboarding-rework"
 
+# Case 5: a mistyped type/effort key fails loudly instead of forwarding
+# an empty --single-select-option-id to gh
+repo=$(setup_stub_project '{"items":[]}')
+if (cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/create-item.sh "t" "b" "tsak" m 2>/dev/null); then
+  fail "expected an error on an invalid type key"
+fi
+
 echo "PASS: test-create-item.sh"

@@ -14,14 +14,17 @@ type="${3:--}"
 effort="${4:--}"
 
 if [ "$status" != "-" ]; then
+  status_option=$(resolve STATUS "$status" Status)
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$STATUS_FIELD" --single-select-option-id "${STATUS[$status]}"
+    --field-id "$STATUS_FIELD" --single-select-option-id "$status_option"
 fi
 if [ "$type" != "-" ]; then
+  type_option=$(resolve TYPE "$type" Type)
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$TYPE_FIELD" --single-select-option-id "${TYPE[$type]}"
+    --field-id "$TYPE_FIELD" --single-select-option-id "$type_option"
 fi
 if [ "$effort" != "-" ]; then
+  effort_option=$(resolve EFFORT "$effort" Effort)
   gh project item-edit --project-id "$PROJECT_ID" --id "$id" \
-    --field-id "$EFFORT_FIELD" --single-select-option-id "${EFFORT[$effort]}"
+    --field-id "$EFFORT_FIELD" --single-select-option-id "$effort_option"
 fi
