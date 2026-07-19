@@ -13,7 +13,7 @@ script below needs them resolved up front.
 1. Get your project's number and owner from its URL
    (`github.com/<owner>/projects/<num>` or
    `github.com/orgs/<owner>/projects/<num>`).
-2. Pick a short project key (your ticket prefix, e.g. `ETYM`), then run
+2. Pick a short project key (your ticket prefix, e.g. `ABC`), then run
    `scripts/init-config.sh <project-num> <owner> <project-key>` from your
    repo root. It resolves the project ID and every field/option ID via
    `gh` and writes `gh-triage.conf.sh`, matching field/option
@@ -52,7 +52,7 @@ instead of flagging an existing item. Epic is a regular item like any
 other Type - see "Epics" below, not a separate format.
 
 Every item's title carries a project-wide ID prefix:
-`<PROJECT_KEY>-<N>: <title>` (e.g. `ETYM-7: Add dark mode`), one flat
+`<PROJECT_KEY>-<N>: <title>` (e.g. `ABC-7: Add dark mode`), one flat
 counter shared by every Type - Epics aren't numbered separately.
 
 ### Epics
@@ -187,7 +187,7 @@ to check whether the work is already tracked - duplicates are easy to
 miss once a board grows past a couple dozen items.
 
 If your project prepends a unique, sequential ID to every item title
-(e.g. `ETYM-1: ...`, `ETYM-2: ...`), pass `--number` and give just the
+(e.g. `ABC-1: ...`, `ABC-2: ...`), pass `--number` and give just the
 rest of the title - `create-item.sh` looks up the next number itself and
 prepends your configured `PROJECT_KEY`. If your project doesn't use that
 convention, drop `--number` and pass whatever title you want.
@@ -246,7 +246,7 @@ code alone.
 
 ## Split a placeholder item into finer items
 
-When a bundled placeholder item (e.g. "ETYM-16: Word pages, backtraces, and
+When a bundled placeholder item (e.g. "ABC-16: Word pages, backtraces, and
 SEO breakdowns (rest of Phase 3)") starts active work, replace it with
 individually-tracked items rather than editing it in place:
 

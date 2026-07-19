@@ -23,10 +23,10 @@ grep -q -- "--field-id field_effort --single-select-option-id opt_m" "$log" \
   || fail "expected Effort set to m"
 
 # Case 3: --number prepends PROJECT_KEY-N
-repo=$(setup_stub_project '{"items":[{"title":"ETYM-4: existing"}]}')
+repo=$(setup_stub_project '{"items":[{"title":"ABC-4: existing"}]}')
 (cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/create-item.sh --number "New" "body" bug s >/dev/null)
-grep -q -- "--title ETYM-5: New" "$repo/gh-calls.log" \
-  || fail "expected title prefixed ETYM-5:"
+grep -q -- "--title ABC-5: New" "$repo/gh-calls.log" \
+  || fail "expected title prefixed ABC-5:"
 
 # Case 4: --epic tags the new item's Epic field with the given slug
 repo=$(setup_stub_project '{"items":[]}')

@@ -45,7 +45,7 @@ FULL_FIELDS='{"fields":[
 
 # Case 1: a full field-list resolves every field/option, none left blank
 repo=$(setup_bare_repo "$FULL_FIELDS")
-(cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ETYM)
+(cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ABC)
 conf="$repo/gh-triage.conf.sh"
 [ -f "$conf" ] || fail "expected gh-triage.conf.sh to be written"
 grep -q "=  # not found" "$conf" && fail "expected every field/option to resolve"
@@ -53,13 +53,13 @@ grep -q "STATUS_FIELD=F_status" "$conf" || fail "expected STATUS_FIELD resolved"
 grep -qF "[backlog]=O_backlog" "$conf" || fail "expected backlog option resolved"
 
 # Case 2: refuses to overwrite an existing conf file
-if (cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ETYM 2>/dev/null); then
+if (cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ABC 2>/dev/null); then
   fail "expected init-config.sh to refuse an existing conf file"
 fi
 
 # Case 3: a field the project doesn't have is left "not found", not guessed
 repo=$(setup_bare_repo '{"fields":[{"id":"F_status","name":"Status","options":[{"id":"O_backlog","name":"Backlog"}]}]}')
-(cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ETYM)
+(cd "$repo" && PATH="$repo/bin:$PATH" bash scripts/init-config.sh 1 test-owner ABC)
 grep -q -- "TYPE_FIELD=  # not found" "$repo/gh-triage.conf.sh" \
   || fail "expected TYPE_FIELD left as not found"
 

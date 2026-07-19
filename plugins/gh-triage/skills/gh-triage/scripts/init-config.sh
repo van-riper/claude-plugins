@@ -3,7 +3,7 @@
 # Bootstraps gh-triage.conf.sh at the repo root from your GitHub
 # Project's actual fields, so you don't hand-transcribe refresh-ids.sh's
 # JSON into bash yourself. project-key is your chosen short ticket prefix
-# (e.g. ETYM), used verbatim - it isn't derived from anything in the
+# (e.g. ABC), used verbatim - it isn't derived from anything in the
 # project. Best-effort on fields/options: anything that isn't named to
 # match the Status/Type/Effort model (case-insensitively) is left blank
 # with a comment instead of guessed - fill it in by hand, or delete the

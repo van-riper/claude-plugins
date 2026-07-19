@@ -20,7 +20,7 @@ setup_stub_project() {
   git -C "$repo" init -q
 
   cat > "$repo/gh-triage.conf.sh" <<'EOF'
-PROJECT_KEY=ETYM
+PROJECT_KEY=ABC
 PROJECT_NUM=1
 OWNER=test-owner
 PROJECT_ID=PVT_test

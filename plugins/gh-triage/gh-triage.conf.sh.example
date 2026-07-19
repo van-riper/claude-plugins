@@ -5,14 +5,14 @@
 # project/field/option IDs, not credentials - so it's safe to commit.
 #
 # Bootstrapping the values:
-#   1. Pick a short PROJECT_KEY (your ticket prefix, e.g. ETYM) and set
+#   1. Pick a short PROJECT_KEY (your ticket prefix, e.g. ABC) and set
 #      PROJECT_NUM/OWNER/PROJECT_ID from your project's URL and
 #      `gh project view <num> --owner <owner> --format json`.
 #   2. Run scripts/refresh-ids.sh (needs PROJECT_NUM/OWNER set) to print
 #      every field and its option IDs, then fill in the *_FIELD variables
 #      and the option maps below from that output.
 
-PROJECT_KEY=ETYM
+PROJECT_KEY=ABC
 PROJECT_NUM=0
 OWNER=your-github-org-or-user
 PROJECT_ID=PVT_xxxxxxxxxxxxxxxxxxxx
