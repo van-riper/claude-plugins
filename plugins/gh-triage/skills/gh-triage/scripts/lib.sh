@@ -6,6 +6,12 @@
 # fill it in with your own project's IDs (see refresh-ids.sh).
 set -euo pipefail
 
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  echo "error: lib.sh is a library sourced by the other scripts in this" >&2
+  echo "folder - it isn't meant to be run directly." >&2
+  exit 1
+fi
+
 repo_root=$(git rev-parse --show-toplevel)
 conf="$repo_root/gh-triage.conf.sh"
 

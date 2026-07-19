@@ -1,6 +1,7 @@
 ---
 name: gh-triage
 description: Use when adding, updating, or triaging backlog/roadmap items on a GitHub Project (v2) via `gh project`, including creating or linking Epics, and setting up or troubleshooting the project's saved Board/Table views.
+allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/*.sh *)
 ---
 
 ## Setup (once per repo)
@@ -326,13 +327,9 @@ it to `scripts/**` in this skill directory rather than loosening `gh`
 generally. If it doesn't, hand the blocked command to the user to run
 themselves rather than retrying or bypassing the gate.
 
-`gh project field-delete` has no safe default and needs a human's
-explicit go-ahead every time - never retry it automatically or ask for a
-standing grant.
-
 ## Guardrails
 
-- Don't call `gh project` directly for anything `scripts/*.sh` already
+- Don't call any `gh` command directly for anything `scripts/*.sh` already
   does - always go through the script. For anything the scripts don't
   cover, get the user's permission before running a raw `gh` command.
 - Don't duplicate the board's backlog/roadmap detail into a separate doc
