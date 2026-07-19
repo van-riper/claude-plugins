@@ -95,16 +95,11 @@ Before creating anything, run `find-item.sh` with a few likely keywords
 to check whether the work is already tracked - duplicates are easy to
 miss once a board grows past a couple dozen items.
 
-If your project prepends a unique, sequential numeric ID to every item
-title (e.g. `1: ...`, `2: ...`), pass `--number` and give just the rest
-of the title - `create-item.sh` looks up the next number itself:
-
-```sh
-scripts/create-item.sh --number "..." "body text"
-```
-
-If your project doesn't use that convention, drop `--number` and pass
-whatever title you want.
+If your project prepends a unique, sequential ID to every item title
+(e.g. `ETYM-1: ...`, `ETYM-2: ...`), pass `--number` and give just the
+rest of the title - `create-item.sh` looks up the next number itself and
+prepends your configured `PROJECT_KEY`. If your project doesn't use that
+convention, drop `--number` and pass whatever title you want.
 
 `create-item.sh` always sets Status: Backlog. Type and Effort are
 required every time - there's no default, since guessing either wrong is
