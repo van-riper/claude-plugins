@@ -116,15 +116,29 @@ layout - three views, reusing GitHub's three undeletable defaults
 
 | Tab order | View | Repurposes | Layout | Filter | Group by | Sort |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Active | default Board | Board | `-type:Epic -status:Backlog` | Status | Effort ascending |
+| 1 | Active | default Board | Board | `-type:Epic -status:Backlog (-status:Done OR updated:>=@today-2d)` | Status | Effort ascending |
 | 2 | Backlog | default Table | Table | `-type:Epic status:Backlog` | Type | Effort ascending |
 | 3 | Epics | default Roadmap | Table | `-no:epic -status:Done` | Epic | Type ascending |
 
-**Active** is the day-to-day kanban - Ready/Blocked/In Progress/Done
-only, Backlog excluded since deciding what's ready to pull next is the
-Backlog view's job. Its Effort-ascending sort is provisional - revisit
-once the views have been used for a while and a better sort becomes
-obvious in practice.
+**Active** is the day-to-day kanban - Ready/Blocked/In Progress, plus
+Done items updated in the last 2 days. Backlog is excluded since
+deciding what's ready to pull next is the Backlog view's job, not
+Active's. Done items are windowed rather than excluded outright: with
+every Done item kept forever, the Done column grew without bound while
+the columns that actually matter (what's ready, blocked, or being
+worked) stayed small; excluding Done entirely fixed that but felt too
+sparse in practice, so a 2-day recency window keeps a sense of recent
+momentum without the unbounded growth. `updated:>=@today-2d` needs the
+grouped `(-status:Done OR ...)` clause - a plain AND of qualifiers can't
+express "not Done, or Done-and-recent" - verified working against a live
+board (a `status:Backlog OR status:Done` probe confirmed OR/grouping
+parses, and `updated:<@today-2d` returning zero results after a
+board-wide migration touch confirmed the relative-date qualifier
+parses). If your board's recent activity ever makes 2 days feel too
+wide or too narrow, adjust the number - there's nothing else tying it to
+exactly 2. Active's Effort-ascending sort is provisional - revisit once
+the views have been used for a while and a better sort becomes obvious
+in practice.
 
 **Backlog** is a grooming/estimating surface - only `Status: Backlog`
 items, grouped by Type so similar work batches together, sorted by
@@ -159,7 +173,7 @@ For each view, open the project in the browser and click its tab:
 
 1. **Active** (the default Board tab):
    - Click the tab name and rename it to `Active`.
-   - Open the filter bar and enter `-type:Epic -status:Backlog`.
+   - Open the filter bar and enter `-type:Epic -status:Backlog (-status:Done OR updated:>=@today-2d)`.
    - Open the view's `...` menu → Sort by → Effort → ascending. Leave
      Group by on its default (Status).
    - View menu → Fields → enable `Epic` so it shows on each card.
