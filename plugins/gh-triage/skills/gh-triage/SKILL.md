@@ -20,9 +20,10 @@ script below needs them resolved up front.
    names to the Status/Type/Effort model case-insensitively.
 3. Review the generated file. Anything the script couldn't match by
    name is left as `# not found` - either fill it in by hand from
-   `scripts/refresh-ids.sh`'s output, or delete it (and the matching
-   arguments in `set-fields.sh` calls) if your project doesn't have that
-   field.
+   `scripts/refresh-ids.sh`'s output, or delete it if your project
+   doesn't have that field (and drop the matching arguments: Status/
+   Type/Effort from `set-fields.sh` calls, Epic from `set-epic.sh` and
+   `create-item.sh --epic`).
 
 If you'd rather not query `gh` at setup time, copy
 `gh-triage.conf.sh.example` (bundled with this plugin) to your
