@@ -90,6 +90,15 @@ met. There's no automatic rollup from child Status (GitHub Projects v2
 has no computed fields), so it's maintained by hand like any other
 item's Status, and can drift if nobody remembers to bump it.
 
+An Epic item's own `Epic` field holds its own slug too - a
+self-reference, not left blank. Set it the same way a child's is: pass
+`--epic <own-slug>` to `create-item.sh` when creating the Epic, or
+`set-epic.sh <epic-item-id> <own-slug>` afterward for one that predates
+this convention. This exists solely so the Epics view (see "Views") can
+group every item - the Epic and its children alike - into one bucket per
+slug; grouping by a blank field would otherwise scatter each Epic into a
+shared "no epic" bucket alongside any standalone item.
+
 ## Views
 
 `gh project` has no subcommand for creating or configuring saved Views
@@ -99,17 +108,17 @@ layout. Set up and maintain Views by hand in the web UI; every script in
 this skill touches fields and items on the underlying project, never
 view configuration, so nothing here can create one for you.
 
-Because Epic Status reads differently from every other item's (see
-above), keep Epics out of your default working view and give them their
-own view instead. Recommended layout - three views, reusing GitHub's
-three undeletable defaults (Board/Table/Roadmap) rather than hiding any
-of them:
+Epics don't belong in your day-to-day working view - they're
+initiatives, not units of work in flight (see above) - and organizing
+progress by initiative needs its own grouping, not Status. Recommended
+layout - three views, reusing GitHub's three undeletable defaults
+(Board/Table/Roadmap) rather than hiding any of them:
 
 | Tab order | View | Repurposes | Layout | Filter | Group by | Sort |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Active | default Board | Board | `-type:Epic -status:Backlog` | Status | Effort ascending |
-| 2 | Backlog | default Table | Table | `status:Backlog` | Type | Effort ascending |
-| 3 | Epics | default Roadmap | Table | `type:Epic` | Status | ticket number ascending |
+| 2 | Backlog | default Table | Table | `status:Backlog -type:Epic` | Type | Effort ascending |
+| 3 | Epics | default Roadmap | Table | `-status:Done -no:epic` | Epic | Type ascending |
 
 **Active** is the day-to-day kanban - Ready/Blocked/In Progress/Done
 only, Backlog excluded since deciding what's ready to pull next is the
@@ -119,14 +128,32 @@ obvious in practice.
 
 **Backlog** is a grooming/estimating surface - only `Status: Backlog`
 items, grouped by Type so similar work batches together, sorted by
-Effort ascending to surface quick wins first.
+Effort ascending to surface quick wins first. Epics are excluded here
+too, same as Active - Epics has its own dedicated view, so an epic
+sitting in Backlog status shouldn't also surface here.
 
-**Epics** is a Table (not a Board) so a handful of epics read as
-scannable rows - title, Status, Effort, slug all visible at once -
-grouped by Status using the initiative-progress semantics documented
-above, sorted by ticket number ascending (oldest epic first).
+Both **Active** and **Backlog** show the `Epic` field (on cards for
+Active's Board layout, as a column for Backlog's Table layout) - both
+surface child items, so both need the parent Epic slug visible without
+opening each one.
+
+**Epics** shows every item - any Type, any Status except Done - grouped
+by the `Epic` field instead of Status, so each initiative and all of its
+children land in one bucket together: this is what the self-reference
+convention above is for. `-no:epic` hides standalone items with no
+parent Epic set, since this view is scoped to initiative work, not the
+whole board. Sorted by Type ascending, which only surfaces each group's
+Epic row first because the Type field's option order has been moved to
+put `Epic` first, ahead of Bug/Spike/Story/Task - a one-time, project-
+wide reorder (see "Setup steps"), not a per-group manual sort.
 
 ### Setup steps
+
+0. **Reorder the Type field's options once, project-wide:** in the
+   project's field settings, drag `Epic` to the top of the Type option
+   list, ahead of Bug/Spike/Story/Task. This is what makes Epics' sort
+   (below) surface each initiative's own row first in its group -
+   without it, Type-ascending sort would order alphabetically instead.
 
 For each view, open the project in the browser and click its tab:
 
@@ -135,20 +162,20 @@ For each view, open the project in the browser and click its tab:
    - Open the filter bar and enter `-type:Epic -status:Backlog`.
    - Open the view's `...` menu → Sort by → Effort → ascending. Leave
      Group by on its default (Status).
+   - View menu → Fields → enable `Epic` so it shows on each card.
 2. **Backlog** (the default Table tab):
    - Rename the tab to `Backlog`.
-   - Filter bar: `status:Backlog`.
+   - Filter bar: `status:Backlog -type:Epic`.
    - View menu → Group by → Type. Sort by → Effort → ascending.
+   - View menu → Fields → enable `Epic` so it shows as a column.
 3. **Epics** (the default Roadmap tab):
    - Rename the tab to `Epics`.
    - View menu → Layout → Table (switches it off the Roadmap
      timeline layout). If that option is missing or greyed out, hide
      this tab instead and create a new Table view named `Epics` from
      the `+` button next to the tabs - same end state either way.
-   - Filter bar: `type:Epic`.
-   - View menu → Group by → Status. Sort by → whichever field holds
-     your `<PROJECT_KEY>-N` title prefix (e.g. Title) → ascending, so
-     the oldest epic sorts first.
+   - Filter bar: `-status:Done -no:epic`.
+   - View menu → Group by → Epic. Sort by → Type → ascending.
 4. Drag the three tabs into the order Active, Backlog, Epics if they
    aren't already in it.
 
@@ -211,10 +238,12 @@ scripts/create-item.sh --number --epic onboarding-rework "..." "body text" task 
 ```
 
 Creating an Epic itself is the same call with `type` set to `epic` - give
-it a slug as the first line of its body:
+it a slug as the first line of its body, and pass that same slug to
+`--epic` so the Epic's own `Epic` field self-references (see "Epics" -
+the Epics view's grouping depends on this):
 
 ```sh
-scripts/create-item.sh --number "Onboarding rework" "Slug: onboarding-rework" epic l
+scripts/create-item.sh --number --epic onboarding-rework "Onboarding rework" "Slug: onboarding-rework" epic l
 ```
 
 ## Update an existing item
