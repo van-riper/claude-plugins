@@ -229,6 +229,12 @@ Before creating anything, run `find-item.sh` with a few likely keywords
 to check whether the work is already tracked - duplicates are easy to
 miss once a board grows past a couple dozen items.
 
+Draft the body from `assets/<type>.md`, whose `{{...}}` placeholders
+mark what to fill in, rather than writing section structure from
+scratch. If the right level of detail for the Effort you're setting
+isn't obvious, `references/<type>.md` has two worked examples (S and L
+effort) per type.
+
 If your project prepends a unique, sequential ID to every item title
 (e.g. `ABC-1: ...`, `ABC-2: ...`), pass `--number` and give just the
 rest of the title - `create-item.sh` looks up the next number itself and
