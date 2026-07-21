@@ -9,4 +9,8 @@
 
 ## Acceptance Criteria
 - {{concrete, testable condition}}
+
+## Resolution
+{{fill in once Status moves to Done: what actually shipped, noting
+any deviation from Objective, with a link to the commit/PR}}
 ```

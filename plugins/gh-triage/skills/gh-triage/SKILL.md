@@ -284,6 +284,15 @@ scripts/set-fields.sh <item-id> in_progress - -
 Set Status to `in_progress` when you start non-trivial work on an item,
 `done` once it ships.
 
+When Status moves to `done`, also fill in the body's **Resolution**
+section - every `assets/<type>.md` template ends with one. Fetch the
+current body via `find-item.sh`, fill in the placeholder, and rewrite
+the whole body with `edit-item.sh <content-id> - "<full body>"` (it
+replaces the body wholesale, so paste back the untouched sections too,
+not just the diff). What goes in Resolution varies by type - a Bug's
+root cause and fix commit, a Spike's actual decision, an Epic's
+shipped-vs-scope summary - see the template for specifics.
+
 To link an existing item to an Epic (or change its Epic), use
 `scripts/set-epic.sh <item-id> <epic-slug>` with the parent Epic's slug
 (from the `Slug:` line in its body).

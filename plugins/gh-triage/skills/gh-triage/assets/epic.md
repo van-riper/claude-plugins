@@ -12,4 +12,8 @@ Slug: {{slug}}
 ## Acceptance Criteria
 - {{general condition that must hold for the epic as a whole,
   not a per-ticket checklist restating "ticket N shipped"}}
+
+## Resolution
+{{fill in once Status moves to Done: what actually shipped against
+Scope, and any items descoped or moved to a new Epic}}
 ```
