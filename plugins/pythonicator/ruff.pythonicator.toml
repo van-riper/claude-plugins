@@ -6,7 +6,7 @@ required-version = ">=0.15"
 
 line-length = 80
 preview = true
-src = ["src", "test"]
+src = ["src", "tests"]
 
 [format]
 preview = true
@@ -81,7 +81,12 @@ select = [
 ]
 
 ignore = [
-    "PLR2004",  # allow magic numbers
+    # Magic numbers are fine for the most part.
+    "PLR2004",  # magic-value-comparison
+
+    # TODO comments don't need an author or issue link.
+    "TD002",    # missing-todo-author
+    "TD003",    # missing-todo-link
 
     # Rules that conflict with the ruff formatter.
     "W191",     # tab-indentation
