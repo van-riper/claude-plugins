@@ -11,7 +11,9 @@ pythonic-canon skill only applies its naming/docstring/structure rules if the
 agent chooses to invoke it, and nothing else in the session requires that. So
 this hook reads the session transcript and blocks once more if Python changed
 but the skill was never invoked, the same way it already blocks on dirty ruff
-or ty output.
+or ty output. When the session dispatched subagents to write Python, a bare
+canon-skill call by the controller doesn't cover code it never wrote, so the
+bar rises to an actual pythonic-reviewer agent dispatch instead.
 
 Scoping to git's changed files keeps the ruff/ty sweep off pre-existing debt
 the agent never touched, and catches edits made by dispatched subagents too.
@@ -197,6 +199,14 @@ SKILL_REMINDER = (
     "skill and walk its judgment checklist against the files you changed."
 )
 
+REVIEWER_REMINDER = (
+    "judgment skill:\nThis session dispatched subagents to write Python, "
+    "so the controller's own reading of pythonic-canon does not cover "
+    "code those subagents wrote. Dispatch the pythonicator:"
+    "pythonic-reviewer agent against the files you changed before "
+    "finishing."
+)
+
 
 def _tool_uses(transcript_path: Path) -> list[dict[str, object]] | None:
     """Collect every tool_use content block in a JSONL transcript.
@@ -257,6 +267,51 @@ def _skill_invoked(transcript_path: Path, skill_name: str) -> bool:
     return False
 
 
+def _agent_dispatched(transcript_path: Path, agent_type: str) -> bool:
+    """Return whether the transcript shows an Agent dispatch to agent_type.
+
+    Args:
+        transcript_path: The session's JSONL transcript.
+        agent_type: The bare subagent type to look for, e.g.
+            "pythonic-reviewer".
+
+    Returns:
+        True when a matching dispatch is found, else False (including
+        when the transcript cannot be read).
+    """
+    for block in _tool_uses(transcript_path) or []:
+        if block.get("name") != "Agent":
+            continue
+        subagent_type = hookbase.field(block.get("input"), "subagent_type")
+        if (
+            isinstance(subagent_type, str)
+            and subagent_type.rsplit(":", 1)[-1] == agent_type
+        ):
+            return True
+    return False
+
+
+def _any_agent_dispatched(transcript_path: Path) -> bool:
+    """Return whether the transcript shows any Agent tool dispatch.
+
+    Marks a session as subagent-driven, so the plain canon-skill check
+    (a proxy for the controller's own review) no longer covers the diff:
+    code the controller never wrote needs the pythonic-reviewer agent
+    dispatched against it instead.
+
+    Args:
+        transcript_path: The session's JSONL transcript.
+
+    Returns:
+        True when at least one Agent tool_use block is present, else
+        False (including when the transcript cannot be read).
+    """
+    return any(
+        block.get("name") == "Agent"
+        for block in _tool_uses(transcript_path) or []
+    )
+
+
 def _block(findings: list[str]) -> None:
     """Write a Stop-blocking decision carrying the sweep findings.
 
@@ -274,16 +329,43 @@ def _block(findings: list[str]) -> None:
     sys.stdout.write(json.dumps(output))
 
 
+def _judgment_reminder(
+    transcript: Path, *, is_python_changed: bool
+) -> str | None:
+    """Return the judgment-layer reminder text, if any, for this stop.
+
+    Args:
+        transcript: The session's JSONL transcript.
+        is_python_changed: Whether Python changed this session, by git diff
+            or the per-edit session marker.
+
+    Returns:
+        REVIEWER_REMINDER when subagents wrote Python without a
+        pythonic-reviewer dispatch, SKILL_REMINDER when the controller
+        wrote Python without invoking pythonic-canon, else None.
+    """
+    if not is_python_changed:
+        return None
+    if _any_agent_dispatched(transcript):
+        if not _agent_dispatched(transcript, "pythonic-reviewer"):
+            return REVIEWER_REMINDER
+        return None
+    if not _skill_invoked(transcript, "pythonic-canon"):
+        return SKILL_REMINDER
+    return None
+
+
 def main() -> int:
     """Sweep the session's changed files, blocking the stop if any are dirty.
 
-    Also blocks when Python changed but the pythonic-canon skill was never
-    invoked this session, so the judgment layer gets the same enforcement
-    the mechanical ruff/ty sweep already has. "Changed" is git's dirty
-    working tree, or a workflow that commits after every task (subagent-
-    driven-development, for instance) leaves no working-tree diff by the
-    time Stop fires, so a per-edit session marker (see
-    hookbase.mark_session_file) backs up the git-diff signal.
+    Also blocks the judgment layer's gap: a plain canon-skill invocation
+    when the controller wrote the Python itself, or a pythonic-reviewer
+    dispatch when subagents did. Gated on whether Python changed this
+    session at all, not only on git's current working-tree diff — a
+    workflow that commits after every task (subagent-driven-development,
+    for instance) leaves no working-tree diff by the time Stop fires, so
+    a per-edit session marker (see hookbase.mark_session_file) backs up
+    the git-diff signal.
 
     Returns:
         Always 0; the hook fails open and never errors the stop.
@@ -310,10 +392,11 @@ def main() -> int:
         is_python_changed = bool(paths) or hookbase.session_marker_exists(
             transcript, hookbase.PYTHON_TOUCHED_MARKER
         )
-        if is_python_changed and not _skill_invoked(
-            transcript, "pythonic-canon"
-        ):
-            findings.append(SKILL_REMINDER)
+        reminder = _judgment_reminder(
+            transcript, is_python_changed=is_python_changed
+        )
+        if reminder is not None:
+            findings.append(reminder)
     if findings:
         _block(findings)
     return 0

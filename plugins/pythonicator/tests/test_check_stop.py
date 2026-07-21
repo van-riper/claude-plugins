@@ -321,6 +321,153 @@ def test_stop_silent_when_skill_invoked(tmp_path: Path) -> None:
     assert not out
 
 
+def test_agent_dispatched_finds_bare_and_namespaced_call(
+    tmp_path: Path,
+) -> None:
+    """_agent_dispatched matches both bare and plugin-namespaced types."""
+    bare = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "pythonic-reviewer"},
+                }
+            ]
+        ],
+    )
+    namespaced = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {
+                        "subagent_type": "pythonicator:pythonic-reviewer"
+                    },
+                }
+            ]
+        ],
+    )
+    assert check_stop._agent_dispatched(bare, "pythonic-reviewer")
+    assert check_stop._agent_dispatched(namespaced, "pythonic-reviewer")
+
+
+def test_agent_dispatched_false_when_absent(tmp_path: Path) -> None:
+    """_agent_dispatched returns False when no matching dispatch appears."""
+    transcript = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "general-purpose"},
+                }
+            ]
+        ],
+    )
+    assert not check_stop._agent_dispatched(transcript, "pythonic-reviewer")
+
+
+def test_any_agent_dispatched_true_when_present(tmp_path: Path) -> None:
+    """_any_agent_dispatched is True when any Agent call appears."""
+    transcript = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "general-purpose"},
+                }
+            ]
+        ],
+    )
+    assert check_stop._any_agent_dispatched(transcript)
+
+
+def test_any_agent_dispatched_false_when_absent(tmp_path: Path) -> None:
+    """_any_agent_dispatched is False with no Agent call, or unreadable."""
+    transcript = _transcript(
+        tmp_path, [[{"type": "tool_use", "name": "Edit", "input": {}}]]
+    )
+    assert not check_stop._any_agent_dispatched(transcript)
+    assert not check_stop._any_agent_dispatched(tmp_path / "missing.jsonl")
+
+
+def test_stop_blocks_when_subagents_used_without_reviewer(
+    tmp_path: Path,
+) -> None:
+    """Subagent-written Python without a reviewer dispatch blocks."""
+    _init_repo(tmp_path)
+    (tmp_path / "new.py").write_text("x = 1\n", encoding="utf-8")
+    transcript = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "general-purpose"},
+                }
+            ],
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Skill",
+                    "input": {"skill": "pythonic-canon"},
+                }
+            ],
+        ],
+    )
+    with mock.patch.object(check_stop, "_sweep", return_value=[]):
+        code, out = _run_main({
+            "cwd": str(tmp_path),
+            "transcript_path": str(transcript),
+        })
+    assert code == 0
+    decision = json.loads(out)
+    assert decision["decision"] == "block"
+    assert "pythonic-reviewer" in decision["reason"]
+
+
+def test_stop_silent_when_subagents_used_with_reviewer(
+    tmp_path: Path,
+) -> None:
+    """A pythonic-reviewer dispatch satisfies subagent-written Python."""
+    _init_repo(tmp_path)
+    (tmp_path / "new.py").write_text("x = 1\n", encoding="utf-8")
+    transcript = _transcript(
+        tmp_path,
+        [
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "general-purpose"},
+                }
+            ],
+            [
+                {
+                    "type": "tool_use",
+                    "name": "Agent",
+                    "input": {"subagent_type": "pythonic-reviewer"},
+                }
+            ],
+        ],
+    )
+    with mock.patch.object(check_stop, "_sweep", return_value=[]):
+        code, out = _run_main({
+            "cwd": str(tmp_path),
+            "transcript_path": str(transcript),
+        })
+    assert code == 0
+    assert not out
+
+
 def test_stop_blocks_on_marker_when_python_already_committed(
     tmp_path: Path,
 ) -> None:
