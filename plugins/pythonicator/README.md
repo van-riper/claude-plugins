@@ -127,7 +127,7 @@ into the repo root:
 
 ```shell
 find ~/.claude/plugins -path '*pythonicator*/ruff.pythonicator.toml' \
-  | sort | head -1 | xargs -I{} cp {} ./ruff.pythonicator.toml
+  | sort | tail -1 | xargs -I{} cp {} ./ruff.pythonicator.toml
 ```
 
 Then wire it yourself into the `ruff.toml` or `pyproject.toml` that the
