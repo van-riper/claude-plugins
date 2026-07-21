@@ -158,9 +158,8 @@ convention = "google"
 [lint.pylint]
 max-nested-blocks = 4
 
-# NOTE: per-file-ignores do NOT propagate to projects that `extend` this file.
-# ruff anchors these globs to THIS directory, so they only match files under
-# ~/.config/ruff/. Each project must declare its own test ignores locally.
-# Everything above (select, ignore, convention, mccabe, pylint) DOES inherit.
-[lint.per-file-ignores]
-"tests/**" = ["S101", "PLR2004", "SLF001"]
+# No [lint.per-file-ignores] here on purpose: ruff anchors those globs to
+# the directory of the file that declares them, not the extending project's
+# root, so they'd silently stop matching the moment this file is copied
+# somewhere else. Declare per-file-ignores in the project's own pyproject.toml
+# or ruff.toml (the file with `extend = "ruff.pythonicator.toml"`) instead.
