@@ -166,3 +166,13 @@ max-nested-blocks = 4
 # root, so they'd silently stop matching the moment this file is copied
 # somewhere else. Declare per-file-ignores in the project's own pyproject.toml
 # or ruff.toml (the file with `extend = "ruff.pythonicator.toml"`) instead.
+#
+# Common examples, for reference (uncomment and adjust in your own config,
+# using `[tool.ruff.lint.per-file-ignores]` instead if that config lives in
+# pyproject.toml):
+#
+# [lint.per-file-ignores]
+# "tests/*.py" = ["S101"]         # asserts are fine in tests
+# "tests/fixtures/*.py" = ["ALL"] # fixtures are deliberately non-conforming
+# "__init__.py" = ["F401"]        # re-exports look like unused imports
+# "__main__.py" = ["T201"]        # CLI entrypoints legitimately print
