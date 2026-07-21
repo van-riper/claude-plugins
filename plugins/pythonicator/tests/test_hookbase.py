@@ -66,3 +66,48 @@ def test_git_root_none_outside_repo(tmp_path: Path) -> None:
 def test_git_lines_empty_on_failure(tmp_path: Path) -> None:
     """git_lines returns no lines when the git command fails."""
     assert hookbase.git_lines(["bogus-subcommand"], tmp_path) == []
+
+
+def test_session_dir_from_top_level_transcript(tmp_path: Path) -> None:
+    """A bare transcript path resolves to a same-named sibling dir."""
+    transcript = tmp_path / "abc123.jsonl"
+    assert hookbase.session_dir(transcript) == tmp_path / "abc123"
+
+
+def test_session_dir_from_subagent_transcript(tmp_path: Path) -> None:
+    """A subagent transcript path resolves to its parent session dir."""
+    session = tmp_path / "abc123"
+    transcript = session / "subagents" / "agent-xyz.jsonl"
+    assert hookbase.session_dir(transcript) == session
+
+
+def test_mark_session_file_then_exists(tmp_path: Path) -> None:
+    """A marker written for a transcript path is then found present."""
+    transcript = tmp_path / "abc123.jsonl"
+    hookbase.mark_session_file(transcript, "python-touched")
+    assert hookbase.session_marker_exists(transcript, "python-touched")
+
+
+def test_mark_session_file_visible_from_subagent_path(tmp_path: Path) -> None:
+    """A marker written via a subagent path is visible from the top-level."""
+    session = tmp_path / "abc123"
+    subagent_transcript = session / "subagents" / "agent-xyz.jsonl"
+    hookbase.mark_session_file(subagent_transcript, "python-touched")
+    top_level_transcript = tmp_path / "abc123.jsonl"
+    assert hookbase.session_marker_exists(
+        top_level_transcript, "python-touched"
+    )
+
+
+def test_session_marker_exists_false_when_absent(tmp_path: Path) -> None:
+    """No marker means session_marker_exists reports False."""
+    transcript = tmp_path / "abc123.jsonl"
+    assert not hookbase.session_marker_exists(transcript, "python-touched")
+
+
+def test_mark_session_file_fails_open_on_oserror(tmp_path: Path) -> None:
+    """A mkdir failure is swallowed rather than raised."""
+    transcript = tmp_path / "abc123.jsonl"
+    with mock.patch.object(hookbase.Path, "mkdir", side_effect=OSError("nope")):
+        hookbase.mark_session_file(transcript, "python-touched")
+    assert not hookbase.session_marker_exists(transcript, "python-touched")

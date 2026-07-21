@@ -106,3 +106,36 @@ def test_main_silent_when_tool_absent(tmp_path: Path) -> None:
         code, out = _run_main(payload)
     assert code == 0
     assert not out
+
+
+def test_main_marks_session_on_python_edit(tmp_path: Path) -> None:
+    """Editing a .py file marks the session as having touched Python."""
+    target = tmp_path / "module.py"
+    target.write_text("value = 1\n", encoding="utf-8")
+    transcript = tmp_path / "session.jsonl"
+    payload = json.dumps({
+        "tool_input": {"file_path": str(target)},
+        "transcript_path": str(transcript),
+    })
+    with mock.patch.object(
+        check_edit.toolrunner, "tool_command", return_value=None
+    ):
+        _run_main(payload)
+    assert check_edit.hookbase.session_marker_exists(
+        transcript, check_edit.hookbase.PYTHON_TOUCHED_MARKER
+    )
+
+
+def test_main_no_marker_for_non_python_edit(tmp_path: Path) -> None:
+    """A non-Python edit never marks the session."""
+    target = tmp_path / "data.txt"
+    target.write_text("x", encoding="utf-8")
+    transcript = tmp_path / "session.jsonl"
+    payload = json.dumps({
+        "tool_input": {"file_path": str(target)},
+        "transcript_path": str(transcript),
+    })
+    _run_main(payload)
+    assert not check_edit.hookbase.session_marker_exists(
+        transcript, check_edit.hookbase.PYTHON_TOUCHED_MARKER
+    )

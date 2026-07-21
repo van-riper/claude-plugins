@@ -13,10 +13,17 @@ this hook reads the session transcript and blocks once more if Python changed
 but the skill was never invoked, the same way it already blocks on dirty ruff
 or ty output.
 
-Scoping to git's changed files keeps the sweep off pre-existing debt the agent
-never touched, and catches edits made by dispatched subagents too. The hook
-holds no state: every stop re-derives the file list and re-runs the tools, so a
-partial fix simply shrinks the next report.
+Scoping to git's changed files keeps the ruff/ty sweep off pre-existing debt
+the agent never touched, and catches edits made by dispatched subagents too.
+The judgment-layer check, though, can't rely on git diff alone: a workflow
+that commits after every task (subagent-driven-development, for instance)
+leaves no working-tree diff by the time Stop fires, silently erasing the
+evidence that Python changed at all. check_edit.py's per-edit hook backs this
+up with a per-session marker (hookbase.mark_session_file) touched whenever a
+.py file is edited, subagent edits included, so this hook can tell "Python
+changed this session" apart from "Python is dirty right now." The hook holds
+no other state: every stop re-derives the file list and re-runs the tools, so
+a partial fix simply shrinks the next report.
 
 Never raises: a missing git, tool, or transcript fails open and lets the stop
 proceed.
@@ -27,7 +34,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     import subprocess
@@ -191,6 +198,37 @@ SKILL_REMINDER = (
 )
 
 
+def _tool_uses(transcript_path: Path) -> list[dict[str, object]] | None:
+    """Collect every tool_use content block in a JSONL transcript.
+
+    Args:
+        transcript_path: The session's JSONL transcript.
+
+    Returns:
+        The tool_use block dicts found, or None when the transcript
+        cannot be read.
+    """
+    try:
+        lines = transcript_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    blocks: list[dict[str, object]] = []
+    for raw_line in lines:
+        try:
+            entry = json.loads(raw_line)
+        except json.JSONDecodeError:
+            continue
+        content = hookbase.field(hookbase.field(entry, "message"), "content")
+        if not isinstance(content, list):
+            continue
+        blocks.extend(
+            cast("dict[str, object]", block)
+            for block in content
+            if isinstance(block, dict) and block.get("type") == "tool_use"
+        )
+    return blocks
+
+
 def _skill_invoked(transcript_path: Path, skill_name: str) -> bool:
     """Return whether the transcript shows a Skill call for skill_name.
 
@@ -207,31 +245,15 @@ def _skill_invoked(transcript_path: Path, skill_name: str) -> bool:
         read (an unreadable transcript is not evidence of a skipped
         skill), else False.
     """
-    try:
-        lines = transcript_path.read_text(encoding="utf-8").splitlines()
-    except OSError:
+    blocks = _tool_uses(transcript_path)
+    if blocks is None:
         return True
-    for raw_line in lines:
-        try:
-            entry = json.loads(raw_line)
-        except json.JSONDecodeError:
+    for block in blocks:
+        if block.get("name") != "Skill":
             continue
-        content = hookbase.field(hookbase.field(entry, "message"), "content")
-        if not isinstance(content, list):
-            continue
-        for block in content:
-            if not (
-                isinstance(block, dict)
-                and block.get("type") == "tool_use"
-                and block.get("name") == "Skill"
-            ):
-                continue
-            skill = hookbase.field(block.get("input"), "skill")
-            if (
-                isinstance(skill, str)
-                and skill.rsplit(":", 1)[-1] == skill_name
-            ):
-                return True
+        skill = hookbase.field(block.get("input"), "skill")
+        if isinstance(skill, str) and skill.rsplit(":", 1)[-1] == skill_name:
+            return True
     return False
 
 
@@ -257,7 +279,11 @@ def main() -> int:
 
     Also blocks when Python changed but the pythonic-canon skill was never
     invoked this session, so the judgment layer gets the same enforcement
-    the mechanical ruff/ty sweep already has.
+    the mechanical ruff/ty sweep already has. "Changed" is git's dirty
+    working tree, or a workflow that commits after every task (subagent-
+    driven-development, for instance) leaves no working-tree diff by the
+    time Stop fires, so a per-edit session marker (see
+    hookbase.mark_session_file) backs up the git-diff signal.
 
     Returns:
         Always 0; the hook fails open and never errors the stop.
@@ -277,13 +303,16 @@ def main() -> int:
     if root is None:
         return 0
     paths = _changed_python_files(root)
-    if not paths:
-        return 0
-    findings = _sweep(paths)
+    findings = _sweep(paths) if paths else []
     raw_transcript = hookbase.field(payload, "transcript_path")
     if isinstance(raw_transcript, str) and raw_transcript:
         transcript = Path(raw_transcript)
-        if not _skill_invoked(transcript, "pythonic-canon"):
+        is_python_changed = bool(paths) or hookbase.session_marker_exists(
+            transcript, hookbase.PYTHON_TOUCHED_MARKER
+        )
+        if is_python_changed and not _skill_invoked(
+            transcript, "pythonic-canon"
+        ):
             findings.append(SKILL_REMINDER)
     if findings:
         _block(findings)

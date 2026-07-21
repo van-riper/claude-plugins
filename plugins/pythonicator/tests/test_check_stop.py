@@ -321,6 +321,49 @@ def test_stop_silent_when_skill_invoked(tmp_path: Path) -> None:
     assert not out
 
 
+def test_stop_blocks_on_marker_when_python_already_committed(
+    tmp_path: Path,
+) -> None:
+    """Python touched and committed away still blocks without the skill.
+
+    A workflow that commits after every task (e.g. subagent-driven
+    development) leaves no working-tree diff by the time Stop fires, so
+    the judgment check must not depend solely on git diff.
+    """
+    _init_repo(tmp_path)
+    (tmp_path / "new.py").write_text("x = 1\n", encoding="utf-8")
+    _git(tmp_path, "add", "new.py")
+    _git(tmp_path, "commit", "-m", "feat: add new module")
+    transcript = tmp_path / "session.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    check_stop.hookbase.mark_session_file(
+        transcript, check_stop.hookbase.PYTHON_TOUCHED_MARKER
+    )
+    code, out = _run_main({
+        "cwd": str(tmp_path),
+        "transcript_path": str(transcript),
+    })
+    assert code == 0
+    decision = json.loads(out)
+    assert decision["decision"] == "block"
+    assert "pythonic-canon skill" in decision["reason"]
+
+
+def test_stop_silent_when_no_marker_and_git_diff_clean(
+    tmp_path: Path,
+) -> None:
+    """A clean repo with no session marker stays silent."""
+    _init_repo(tmp_path)
+    transcript = tmp_path / "session.jsonl"
+    transcript.write_text("", encoding="utf-8")
+    code, out = _run_main({
+        "cwd": str(tmp_path),
+        "transcript_path": str(transcript),
+    })
+    assert code == 0
+    assert not out
+
+
 def test_scoping_excludes_unchanged_committed_files(tmp_path: Path) -> None:
     """_changed_python_files returns changed and new .py, not clean ones."""
     _init_repo(tmp_path)

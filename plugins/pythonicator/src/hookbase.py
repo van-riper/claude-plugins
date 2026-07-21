@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import cast
 
 GIT_TIMEOUT_SECONDS = 60
+PYTHON_TOUCHED_MARKER = "python-touched"
 
 
 def field(mapping: object, key: str) -> object:
@@ -83,3 +84,52 @@ def git_root(cwd: Path) -> Path | None:
     """
     lines = git_lines(["rev-parse", "--show-toplevel"], cwd)
     return Path(lines[0]) if lines else None
+
+
+def session_dir(transcript_path: Path) -> Path:
+    """Return the per-session state directory for a transcript path.
+
+    A subagent's own hook invocation carries its nested transcript path
+    (`<session>/subagents/agent-*.jsonl`); the top-level hook carries
+    `<session>.jsonl` next to that directory. Both forms resolve to the
+    same `<session>` directory, so state written from a subagent's hook
+    and read from the top-level's land in the same place.
+
+    Args:
+        transcript_path: A transcript path from any hook payload in the
+            session, top-level or subagent.
+
+    Returns:
+        The per-session state directory (not guaranteed to exist).
+    """
+    if transcript_path.parent.name == "subagents":
+        return transcript_path.parent.parent
+    return transcript_path.parent / transcript_path.stem
+
+
+def mark_session_file(transcript_path: Path, name: str) -> None:
+    """Touch a per-session marker file, failing open on any OSError.
+
+    Args:
+        transcript_path: A transcript path from the current hook payload.
+        name: The marker's file name.
+    """
+    try:
+        directory = session_dir(transcript_path)
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / name).touch()
+    except OSError:
+        pass
+
+
+def session_marker_exists(transcript_path: Path, name: str) -> bool:
+    """Return whether a per-session marker file has been touched.
+
+    Args:
+        transcript_path: A transcript path from the current hook payload.
+        name: The marker's file name.
+
+    Returns:
+        True when the marker file exists for this session.
+    """
+    return (session_dir(transcript_path) / name).exists()

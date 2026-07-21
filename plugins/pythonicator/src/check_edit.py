@@ -9,6 +9,13 @@ The two ruff hooks never double-signal about the same edit: this one only
 fixes and never speaks, while the stop hook only reports (and blocks) and never
 fires per edit. Never blocks the edit: a missing tool or unexpected error fails
 open.
+
+Also touches a per-session marker (see hookbase.mark_session_file) recording
+that Python was edited this session, subagent edits included. check_stop.py's
+judgment-layer check reads it instead of relying solely on git's working-tree
+diff, which a workflow that commits after every task (e.g.
+subagent-driven-development) would otherwise leave empty by the time Stop
+fires.
 """
 
 from __future__ import annotations
@@ -56,6 +63,11 @@ def main() -> int:
     target = _edited_python_file(payload)
     if target is None:
         return 0
+    raw_transcript = hookbase.field(payload, "transcript_path")
+    if isinstance(raw_transcript, str) and raw_transcript:
+        hookbase.mark_session_file(
+            Path(raw_transcript), hookbase.PYTHON_TOUCHED_MARKER
+        )
     ruff = toolrunner.tool_command("ruff")
     if ruff is not None:
         hookbase.run_command([*ruff, "format", str(target)], TIMEOUT_SECONDS)
