@@ -39,7 +39,9 @@ EXTEND_MARKER = "# pythonicator: extend the installed canon ruff config"
 SNAPSHOT_BANNER = (
     "# GENERATED snapshot of the pythonicator canon ruff config.\n"
     "# Do not edit; edit the plugin's ruff.pythonicator.toml and re-release.\n"
-    "# Your ~/.config/ruff/ruff.toml extends this; put overrides there.\n\n"
+    "# Your ~/.config/ruff/ruff.toml extends this; put overrides there.\n"
+    "# Do not copy this snapshot into a repo either; copy the plugin's own\n"
+    "# ruff.pythonicator.toml instead (see the pythonicator README).\n\n"
 )
 
 

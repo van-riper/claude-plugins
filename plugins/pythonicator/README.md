@@ -97,7 +97,6 @@ own config dir under the same name, then prepends one line to
 extend = "ruff.pythonicator.toml"
 
 # your config options and machine-local overrides follow go below
-...
 ```
 
 The snapshot (`~/.config/ruff/ruff.pythonicator.toml`) refreshes each session
@@ -114,3 +113,30 @@ tracking new changes.
 If you would rather your `ruff.toml` _be_ the canon with no local overrides,
 symlink it to `ruff.pythonicator.toml` yourself. The hook detects a symlinked
 `ruff.toml` and leaves it alone.
+
+### Copying the canon into a repo
+
+The setup above extends a copy under `~/.config/ruff/`, which is
+machine-local and never checked into any repo. A project's own `ruff.toml`
+or `pyproject.toml` should not `extend` that path: it will not exist on a
+contributor's machine or in CI. Only a copy committed to the repo is
+guaranteed to resolve everywhere the repo is cloned.
+
+To give a repo its own portable copy, find the installed file and copy it
+into the repo root:
+
+```shell
+find ~/.claude/plugins -path '*pythonicator*/ruff.pythonicator.toml' \
+  | sort | head -1 | xargs -I{} cp {} ./ruff.pythonicator.toml
+```
+
+Then wire it yourself into the `ruff.toml` or `pyproject.toml` that the
+repo already uses:
+
+```toml
+extend = "ruff.pythonicator.toml"
+```
+
+This step is manual and stays that way: nothing in the plugin writes to a
+repo's version-controlled files on its own. A rule change reaches the repo
+only when someone repeats the copy and commits the update.
