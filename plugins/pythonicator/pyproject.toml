@@ -1,7 +1,10 @@
 [tool.ruff]
-extend = "ruff.pythonicator.toml"
-extend-exclude = ["tests/fixtures"]
 target-version = "py312"
+extend = "ruff.pythonicator.toml"
+extend-exclude = [
+    "tests/fixtures",
+    "skills/pythonic-canon/references"
+]
 
 [tool.ruff.lint]
 ignore = ["INP001", "S404", "S603", "S607"]
