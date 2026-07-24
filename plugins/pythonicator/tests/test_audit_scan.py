@@ -5,9 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-import labels
-
 import audit_scan
+import labels
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 SCANNER_DIR = FIXTURES / "scanner"
