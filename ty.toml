@@ -1,0 +1,5 @@
+[environment]
+extra-paths = [
+    "./plugins/pythonicator/src",
+    "./plugins/pythonicator/tests",
+]
