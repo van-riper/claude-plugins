@@ -72,7 +72,7 @@ def main() -> int:
     if ruff is not None:
         hookbase.run_command([*ruff, "format", str(target)], TIMEOUT_SECONDS)
         hookbase.run_command(
-            [*ruff, "check", "--fix", str(target)], TIMEOUT_SECONDS
+            [*ruff, "check", "--fix-only", str(target)], TIMEOUT_SECONDS
         )
     return 0
 
